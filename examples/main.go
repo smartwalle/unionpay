@@ -23,7 +23,7 @@ func main() {
 		return
 	}
 
-	fmt.Println(client.Query("sss"))
+	fmt.Println(client.Query("3619268148194181120"))
 
 	http.HandleFunc("/pay/web", func(writer http.ResponseWriter, request *http.Request) {
 		var html, _ = client.FrontTrans(fmt.Sprintf("%d", xid.Next()))

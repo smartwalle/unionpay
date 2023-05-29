@@ -1,6 +1,9 @@
 package unionpay
 
-import "fmt"
+import (
+	"fmt"
+	"net/url"
+)
 
 const (
 	kSandboxGateway    = "https://gateway.test.95516.com"
@@ -39,4 +42,23 @@ func (this Error) IsSuccess() bool {
 
 func (this Error) IsFailure() bool {
 	return this.Code.IsFailure()
+}
+
+type Payload struct {
+	api    string
+	values url.Values
+}
+
+func NewPayload(api string) *Payload {
+	var nPayload = &Payload{}
+	nPayload.api = api
+	nPayload.values = url.Values{}
+	return nPayload
+}
+
+func (this *Payload) Set(key, value string) *Payload {
+	if key != "" && value != "" {
+		this.values.Set(key, value)
+	}
+	return this
 }

@@ -189,13 +189,13 @@ func (this *Client) URLValues(values url.Values) (url.Values, error) {
 	return values, nil
 }
 
-func (this *Client) request(method, api string, values url.Values) (url.Values, error) {
-	values, err := this.URLValues(values)
+func (this *Client) Request(payload *Payload) (url.Values, error) {
+	values, err := this.URLValues(payload.values)
 	if err != nil {
 		return nil, err
 	}
 
-	var req = ngx.NewRequest(method, this.host+api, ngx.WithClient(this.Client))
+	var req = ngx.NewRequest(http.MethodPost, this.host+payload.api, ngx.WithClient(this.Client))
 	req.SetParams(values)
 
 	rsp, err := req.Do(context.Background())

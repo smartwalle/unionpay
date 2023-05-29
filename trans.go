@@ -10,6 +10,31 @@ const (
 	kFrontTrans = "/gateway/api/frontTransReq.do"
 )
 
+const (
+	kFrontTransTemplate = `
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>
+<body onload="onLoad();">
+<form id="unionpay" action="{{.Action}}" method="POST">
+{{range $k, $v := .Values}}
+<input type="hidden" name="{{$k}}" id="{{$k}}" value="{{index $v 0}}" />
+{{end}}
+</form>
+<script type="text/javascript">
+<!--
+function onLoad()
+{
+document.getElementById("unionpay").submit();
+}
+//-->
+</script>
+</body>
+</html>
+`
+)
+
+// FrontTrans 消费接口 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
 func (this *Client) FrontTrans(orderId string) (string, error) {
 	var values = url.Values{}
 	values.Set("orderId", orderId)
@@ -31,7 +56,6 @@ func (this *Client) FrontTrans(orderId string) (string, error) {
 	}
 
 	var buff = bytes.NewBufferString("")
-
 	tpl, err := template.New("").Parse(kFrontTransTemplate)
 	tpl.Execute(buff, map[string]interface{}{
 		"Values": values,
