@@ -15,19 +15,14 @@ const (
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>
-<body onload="onLoad();">
-<form id="unionpay" action="{{.Action}}" method="POST">
+<body>
+<form id="pay_form" action="{{.Action}}" method="POST">
 {{range $k, $v := .Values}}
 <input type="hidden" name="{{$k}}" id="{{$k}}" value="{{index $v 0}}" />
 {{end}}
 </form>
 <script type="text/javascript">
-<!--
-function onLoad()
-{
-document.getElementById("unionpay").submit();
-}
-//-->
+document.getElementById("pay_form").submit();
 </script>
 </body>
 </html>
@@ -57,6 +52,7 @@ func (this *Client) FrontTrans(orderId string) (string, error) {
 
 	var buff = bytes.NewBufferString("")
 	tpl, err := template.New("").Parse(kFrontTransTemplate)
+
 	tpl.Execute(buff, map[string]interface{}{
 		"Values": values,
 		"Action": this.host + kFrontTrans,
