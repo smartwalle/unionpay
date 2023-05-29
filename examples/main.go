@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/smartwalle/unionpay"
+	"github.com/smartwalle/xid"
 	"net/http"
 )
 
@@ -25,7 +26,7 @@ func main() {
 	fmt.Println(client.Query("sss"))
 
 	http.HandleFunc("/pay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var html, _ = client.FrontTrans()
+		var html, _ = client.FrontTrans(fmt.Sprintf("%d", xid.Next()))
 		writer.Write([]byte(html))
 	})
 

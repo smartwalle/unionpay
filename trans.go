@@ -10,9 +10,9 @@ const (
 	kFrontTrans = "/gateway/api/frontTransReq.do"
 )
 
-func (this *Client) FrontTrans() (string, error) {
+func (this *Client) FrontTrans(orderId string) (string, error) {
 	var values = url.Values{}
-	values.Set("orderId", "testssss")
+	values.Set("orderId", orderId)
 	values.Set("currencyCode", "156")
 	values.Set("txnAmt", "156")
 
