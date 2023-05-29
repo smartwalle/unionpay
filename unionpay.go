@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -54,6 +55,7 @@ type Client struct {
 	interCert *x509.Certificate
 
 	// 签名和验签
+	mu        sync.Mutex
 	signer    Signer
 	verifiers map[string]Verifier
 }
@@ -213,20 +215,10 @@ func (this *Client) request(method, api string, values url.Values) (url.Values, 
 		return nil, err
 	}
 
-	var cert = rValues.Get("signPubKeyCert")
-
-	// 解析证书
-	certificate, err := ncrypto.DecodeCertificate([]byte(cert))
+	verifier, err := this.getVerifier(rValues.Get("signPubKeyCert"))
 	if err != nil {
 		return nil, err
 	}
-
-	if err = internal.VerifyCert(this.rootCert, this.interCert, certificate); err != nil {
-		return nil, err
-	}
-
-	// 验证签名
-	var verifier = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, nil, certificate.PublicKey.(*rsa.PublicKey))))
 
 	signature, err := base64.StdEncoding.DecodeString(rValues.Get("signature"))
 	if err != nil {
@@ -238,4 +230,27 @@ func (this *Client) request(method, api string, values url.Values) (url.Values, 
 	}
 
 	return rValues, nil
+}
+
+func (this *Client) getVerifier(cert string) (Verifier, error) {
+	this.mu.Lock()
+	defer this.mu.Unlock()
+
+	var verifier = this.verifiers[cert]
+
+	if verifier == nil {
+		certificate, err := ncrypto.DecodeCertificate([]byte(cert))
+		if err != nil {
+			return nil, err
+		}
+
+		if err = internal.VerifyCert(this.rootCert, this.interCert, certificate); err != nil {
+			return nil, err
+		}
+
+		verifier = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, nil, certificate.PublicKey.(*rsa.PublicKey))))
+
+		this.verifiers[cert] = verifier
+	}
+	return verifier, nil
 }
