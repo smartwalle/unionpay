@@ -131,11 +131,48 @@ func (this *Client) GetPayment(orderId, txnTime string, opts ...CallOption) (*Pa
 	return payment, nil
 }
 
-// RevokePayment 消费撤销
+// Revoke 消费撤销。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=755&apiservId=448&version=V2.2&bussType=0
-func (this *Client) RevokePayment() (map[string]string, error) {
-	return nil, nil
+//
+// queryId：原消费交易返回的的queryId，可以从消费交易后台通知接口中或者交易状态查询接口(GetPayment)中获取。
+//
+// orderId：商户订单号，和要消费撤销的订单号没有关系。后续可用 orderId 和 txnTime 通过交易状态查询接口(GetPayment) 查询消费撤销信息。
+//
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss。
+//
+// amount：退货金额，单位分，不要带小数点。
+//
+// backURL：后台通知地址。
+func (this *Client) Revoke(queryId, orderId, txnTime, amount, backURL string, opts ...CallOption) (*Revoke, error) {
+	var values = url.Values{}
+	values.Set("accessType", "0")
+	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
+	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	for _, opt := range opts {
+		if opt != nil {
+			opt(values)
+		}
+	}
+	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "31")
+	values.Set("txnSubType", "00")
+	values.Set("origQryId", queryId)
+	values.Set("orderId", orderId)
+	values.Set("txnTime", txnTime)
+	values.Set("txnAmt", amount)
+	values.Set("backUrl", backURL)
+
+	var rValues, err = this.Request(kBackTrans, values)
+	if err != nil {
+		return nil, err
+	}
+
+	var revoke *Revoke
+	if err = internal.DecodeValues(rValues, &revoke); err != nil {
+		return nil, err
+	}
+	return revoke, nil
 }
 
 // Refund 退货接口。
