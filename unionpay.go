@@ -230,6 +230,11 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 		return nil, err
 	}
 
+	// 删除签名相关数据
+	rValues.Del("signPubKeyCert")
+	rValues.Del("signMethod")
+	rValues.Del("signature")
+
 	return rValues, nil
 }
 
