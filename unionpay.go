@@ -18,7 +18,6 @@ import (
 	"os"
 	"sync"
 	"text/template"
-	"time"
 )
 
 type Signer interface {
@@ -186,7 +185,6 @@ func (this *Client) URLValues(values url.Values) (url.Values, error) {
 
 	values.Set("version", this.version)
 	values.Set("encoding", "UTF-8")
-	values.Set("txnTime", time.Now().Format("20060102150405"))
 	values.Set("merId", this.merchantId)
 	values.Set("certId", this.certId)
 	values.Set("signMethod", this.signMethod)
@@ -234,11 +232,6 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 	rValues.Del("signPubKeyCert")
 	rValues.Del("signMethod")
 	rValues.Del("signature")
-
-	var code = Code(rValues.Get("respCode"))
-	if code.IsFailure() {
-		return nil, &Error{Code: code, Msg: rValues.Get("respMsg")}
-	}
 
 	return rValues, nil
 }

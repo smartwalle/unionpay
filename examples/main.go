@@ -5,10 +5,11 @@ import (
 	"github.com/smartwalle/unionpay"
 	"github.com/smartwalle/xid"
 	"net/http"
+	"time"
 )
 
 // TODO 设置回调地址域名
-const kServerDomain = ""
+const kServerDomain = "http://127.0.0.1:9988"
 
 func main() {
 	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)
@@ -26,13 +27,15 @@ func main() {
 		return
 	}
 
+	fmt.Println(client.GetPayment("3619429211615264768", "20230530142746"))
+
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var html, _ = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
+		var html, _ = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), time.Now().Format("20060102150405"), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
 		writer.Write([]byte(html))
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
-		var tn, _ = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
+		var tn, _ = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), time.Now().Format("20060102150405"), "100", kServerDomain+"/union/back")
 		writer.Write([]byte(tn))
 	})
 
@@ -45,6 +48,8 @@ func main() {
 		}
 		writer.WriteHeader(http.StatusOK)
 		writer.Write([]byte("Good"))
+
+		fmt.Println(request.Form)
 	})
 
 	http.HandleFunc("/unionpay/back", func(writer http.ResponseWriter, request *http.Request) {

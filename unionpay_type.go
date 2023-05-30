@@ -45,8 +45,8 @@ const (
 )
 
 type Error struct {
-	Code Code
-	Msg  string
+	Code Code   `query:"respCode"`
+	Msg  string `query:"respMsg"`
 }
 
 func (this Error) Error() string {
