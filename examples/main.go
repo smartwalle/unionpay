@@ -28,13 +28,35 @@ func main() {
 	}
 
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var html, _ = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), time.Now().Format("20060102150405"), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
+		var orderId = fmt.Sprintf("%d", xid.Next())
+		var txnTime = time.Now().Format("20060102150405")
+		fmt.Println(orderId, txnTime)
+		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
+		var html, _ = client.CreateWebPayment(orderId, txnTime, "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
 		writer.Write([]byte(html))
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
-		var tn, _ = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), time.Now().Format("20060102150405"), "100", kServerDomain+"/union/back")
+		var orderId = fmt.Sprintf("%d", xid.Next())
+		var txnTime = time.Now().Format("20060102150405")
+		fmt.Println(orderId, txnTime)
+		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
+		var tn, _ = client.CreateAppPayment(orderId, txnTime, "100", kServerDomain+"/union/back")
 		writer.Write([]byte(tn))
+	})
+
+	http.HandleFunc("/unionpay/query", func(writer http.ResponseWriter, request *http.Request) {
+		request.ParseForm()
+
+		var orderId = request.Form.Get("order_id")
+		var txnTime = request.Form.Get("txn_time")
+
+		var payment, err = client.GetPayment(orderId, txnTime)
+		if err != nil {
+			fmt.Println("查询错误:", err)
+			return
+		}
+		fmt.Printf("%v \n", payment)
 	})
 
 	http.HandleFunc("/unionpay/front", func(writer http.ResponseWriter, request *http.Request) {

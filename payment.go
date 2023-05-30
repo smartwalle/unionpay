@@ -13,13 +13,19 @@ const (
 	kAppTrans   = "/gateway/api/appTransReq.do"
 )
 
-// CreateWebPayment 消费接口-创建网页支付。
+// CreateWebPayment 消费接口-创建网页支付，返回值为 HTML 代码，需要在浏览器中执行该代码。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
 //
-// 返回值为 HTML 代码，需要在浏览器中执行该代码。
+// orderId：商户订单号。
 //
-// 注意：txnTime 的格式为 YYYYMMDDhhmmss，交易状态查询接口(GetPayment) 需要用到。
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，商户的 orderId 和 txnTime 组成唯一订单信息，交易状态查询接口(GetPayment) 需要用到。
+//
+// amount：交易金额，单位分，不要带小数点。
+//
+// frontURL：前台通知地址。
+//
+// backURL：后台通知地址。
 func (this *Client) CreateWebPayment(orderId, txnTime, amount, frontURL, backURL string, opts ...CallOption) (string, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
@@ -52,13 +58,17 @@ func (this *Client) CreateWebPayment(orderId, txnTime, amount, frontURL, backURL
 	return buff.String(), nil
 }
 
-// CreateAppPayment 消费接口-创建 App 支付。
+// CreateAppPayment 消费接口-创建 App 支付，返回值为为客户端调用银联 SDK 需要的 tn。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?apiservId=3021&acpAPIId=961&bussType=0
 //
-// 返回值为为客户端调用银联 SDK 需要的 tn。
+// orderId：商户订单号。
 //
-// 注意：txnTime 的格式为 YYYYMMDDhhmmss，交易状态查询接口(GetPayment) 需要用到。
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，商户的 orderId 和 txnTime 组成唯一订单信息，交易状态查询接口(GetPayment) 需要用到。
+//
+// amount：交易金额，单位分，不要带小数点。
+//
+// backURL：后台通知地址。
 func (this *Client) CreateAppPayment(orderId, txnTime, amount, backURL string, opts ...CallOption) (string, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
@@ -84,9 +94,17 @@ func (this *Client) CreateAppPayment(orderId, txnTime, amount, backURL string, o
 	return rValues.Get("tn"), nil
 }
 
-// GetPayment 交易状态查询接口 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=757&apiservId=448&version=V2.2&bussType=0
+// GetPayment 交易状态查询接口
 //
-// 注意：txnTime 为创建支付提供的 txnTime, 商户的 orderId 和 txnTime 组成唯一订单信息。
+// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=757&apiservId=448&version=V2.2&bussType=0
+//
+// orderId：商户订单号。
+//
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，商户的 orderId 和 txnTime 组成唯一订单信息。
+//
+// 注：
+// 应答报文中，“应答码”即respCode字段，表示的是查询交易本身的应答，即查询这个动作是否成功，不代表被查询交易的状态；
+// 若查询动作成功，即应答码为“00“，则根据“原交易应答码”即origRespCode来判断被查询交易是否成功。此时若origRespCode为00，则表示被查询交易成功。
 func (this *Client) GetPayment(orderId, txnTime string, opts ...CallOption) (*Payment, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
@@ -110,7 +128,6 @@ func (this *Client) GetPayment(orderId, txnTime string, opts ...CallOption) (*Pa
 	if err = internal.DecodeValues(rValues, &payment); err != nil {
 		return nil, err
 	}
-
 	return payment, nil
 }
 
@@ -121,9 +138,46 @@ func (this *Client) RevokePayment() (map[string]string, error) {
 	return nil, nil
 }
 
-// Refund 退货接口
+// Refund 退货接口。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=756&apiservId=448&version=V2.2&bussType=0
-func (this *Client) Refund() (map[string]string, error) {
-	return nil, nil
+//
+// queryId：原消费交易返回的的queryId，可以从消费交易后台通知接口中或者交易状态查询接口(GetPayment)中获取。
+//
+// orderId：商户订单号，和要退款的订单号没有关系。后续可用 orderId 和 txnTime 通过交易状态查询接口(GetPayment) 查询退货信息。
+//
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss。
+//
+// amount：退货金额，单位分，不要带小数点。
+//
+// backURL：后台通知地址。
+func (this *Client) Refund(queryId, orderId, txnTime, amount, backURL string, opts ...CallOption) (*Refund, error) {
+	var values = url.Values{}
+	values.Set("accessType", "0")
+	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
+	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	for _, opt := range opts {
+		if opt != nil {
+			opt(values)
+		}
+	}
+	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "04")
+	values.Set("txnSubType", "00")
+	values.Set("origQryId", queryId)
+	values.Set("orderId", orderId)
+	values.Set("txnTime", txnTime)
+	values.Set("txnAmt", amount)
+	values.Set("backUrl", backURL)
+
+	var rValues, err = this.Request(kBackTrans, values)
+	if err != nil {
+		return nil, err
+	}
+
+	var refund *Refund
+	if err = internal.DecodeValues(rValues, &refund); err != nil {
+		return nil, err
+	}
+	return refund, nil
 }
