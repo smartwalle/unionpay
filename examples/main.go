@@ -5,7 +5,6 @@ import (
 	"github.com/smartwalle/unionpay"
 	"github.com/smartwalle/xid"
 	"net/http"
-	"time"
 )
 
 // TODO 设置回调地址域名
@@ -29,20 +28,18 @@ func main() {
 
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
 		var orderId = fmt.Sprintf("%d", xid.Next())
-		var txnTime = time.Now().Format("20060102150405")
+		var html, txnTime, _ = client.CreateWebPayment(orderId, "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
+		writer.Write([]byte(html))
 		fmt.Println(orderId, txnTime)
 		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
-		var html, _ = client.CreateWebPayment(orderId, txnTime, "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
-		writer.Write([]byte(html))
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
 		var orderId = fmt.Sprintf("%d", xid.Next())
-		var txnTime = time.Now().Format("20060102150405")
+		var tn, txnTime, _ = client.CreateAppPayment(orderId, "100", kServerDomain+"/union/back")
+		writer.Write([]byte(tn))
 		fmt.Println(orderId, txnTime)
 		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
-		var tn, _ = client.CreateAppPayment(orderId, txnTime, "100", kServerDomain+"/union/back")
-		writer.Write([]byte(tn))
 	})
 
 	http.HandleFunc("/unionpay/query", func(writer http.ResponseWriter, request *http.Request) {
@@ -51,7 +48,7 @@ func main() {
 		var orderId = request.Form.Get("order_id")
 		var txnTime = request.Form.Get("txn_time")
 
-		var payment, err = client.GetPayment(orderId, txnTime)
+		var payment, err = client.GetTransaction(orderId, txnTime)
 		if err != nil {
 			fmt.Println("查询错误:", err)
 			return
