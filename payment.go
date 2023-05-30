@@ -9,13 +9,17 @@ const (
 	kFrontTrans = "/gateway/api/frontTransReq.do"
 )
 
-// FrontConsume 消费接口 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
-func (this *Client) FrontConsume(orderId, amount, frontURL, backURL string, opts ...CallOption) (string, error) {
+// CreateWebPayment 消费接口-创建网页支付。
+//
+// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
+//
+// 返回值为 HTML 代码，需要在浏览器中执行该代码。
+func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (string, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
-	values.Set("txnSubType", "01")
+	values.Set("txnSubType", "01")    // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)

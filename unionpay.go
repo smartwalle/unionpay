@@ -225,21 +225,26 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 		return nil, err
 	}
 
-	verifier, err := this.getVerifier(rValues.Get("signPubKeyCert"))
-	if err != nil {
-		return nil, err
-	}
-
-	signature, err := base64.StdEncoding.DecodeString(rValues.Get("signature"))
-	if err != nil {
-		return nil, err
-	}
-
-	if err = verifier.VerifyValues(rValues, signature, nsign.WithIgnore("signature")); err != nil {
+	// 验证签名
+	if err = this.VerifySign(rValues); err != nil {
 		return nil, err
 	}
 
 	return rValues, nil
+}
+
+func (this *Client) VerifySign(values url.Values) error {
+	verifier, err := this.getVerifier(values.Get("signPubKeyCert"))
+	if err != nil {
+		return err
+	}
+
+	signature, err := base64.StdEncoding.DecodeString(values.Get("signature"))
+	if err != nil {
+		return err
+	}
+
+	return verifier.VerifyValues(values, signature, nsign.WithIgnore("signature"))
 }
 
 func (this *Client) getVerifier(cert string) (Verifier, error) {
