@@ -27,8 +27,6 @@ func main() {
 		return
 	}
 
-	fmt.Println(client.GetPayment("3619429211615264768", "20230530142746"))
-
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
 		var html, _ = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), time.Now().Format("20060102150405"), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
 		writer.Write([]byte(html))
