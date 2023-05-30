@@ -8,7 +8,7 @@ import (
 )
 
 // TODO 设置回调地址域名
-const kServerDomain = "http://127.0.0.1:9988"
+const kServerDomain = ""
 
 func main() {
 	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)
@@ -70,15 +70,17 @@ func main() {
 	})
 
 	http.HandleFunc("/unionpay/back", func(writer http.ResponseWriter, request *http.Request) {
-		request.ParseForm()
-
-		if err = client.VerifySign(request.Form); err != nil {
+		var notification, err = client.DecodeNotification(request)
+		if err != nil {
 			fmt.Println("验证通知签名失败")
 			writer.WriteHeader(http.StatusBadRequest)
 			writer.Write([]byte("bad"))
 			return
 		}
 		fmt.Println("验证通知签名成功")
+
+		fmt.Println(notification)
+
 		writer.WriteHeader(http.StatusOK)
 		writer.Write([]byte("ok"))
 	})

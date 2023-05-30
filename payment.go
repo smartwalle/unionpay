@@ -40,7 +40,6 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
 	values.Set("txnType", "01")
 	values.Set("orderId", orderId)
-
 	values.Set("txnAmt", amount)
 	values.Set("frontUrl", frontURL)
 	values.Set("backUrl", backURL)
