@@ -8,7 +8,7 @@ import (
 )
 
 // TODO 设置回调地址域名
-const kServerDomain = "https://www.game2me.net"
+const kServerDomain = ""
 
 func main() {
 	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)

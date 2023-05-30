@@ -235,6 +235,11 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 	rValues.Del("signMethod")
 	rValues.Del("signature")
 
+	var code = Code(rValues.Get("respCode"))
+	if code.IsFailure() {
+		return nil, &Error{Code: code, Msg: rValues.Get("respMsg")}
+	}
+
 	return rValues, nil
 }
 
