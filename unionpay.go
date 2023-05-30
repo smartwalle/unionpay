@@ -228,11 +228,6 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 		return nil, err
 	}
 
-	// 删除签名相关数据
-	rValues.Del("signPubKeyCert")
-	rValues.Del("signMethod")
-	rValues.Del("signature")
-
 	return rValues, nil
 }
 
@@ -247,7 +242,14 @@ func (this *Client) VerifySign(values url.Values) error {
 		return err
 	}
 
-	return verifier.VerifyValues(values, signature, nsign.WithIgnore("signature"))
+	if err = verifier.VerifyValues(values, signature, nsign.WithIgnore("signature")); err != nil {
+		return err
+	}
+	// 删除签名相关数据
+	values.Del("signPubKeyCert")
+	values.Del("signMethod")
+	values.Del("signature")
+	return nil
 }
 
 func (this *Client) getVerifier(cert string) (Verifier, error) {
