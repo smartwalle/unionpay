@@ -17,6 +17,7 @@ import (
 	"net/url"
 	"os"
 	"sync"
+	"text/template"
 	"time"
 )
 
@@ -51,6 +52,8 @@ type Client struct {
 	version    string
 	signMethod string
 
+	frontTransTpl *template.Template
+
 	rootCert  *x509.Certificate
 	interCert *x509.Certificate
 
@@ -80,6 +83,11 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 		return nil, errors.New("key is not a valid *rsa.PrivateKey")
 	}
 
+	tpl, err := template.New("").Parse(kFrontTransTemplate)
+	if err != nil {
+		return nil, err
+	}
+
 	var nClient = &Client{}
 	nClient.Client = http.DefaultClient
 	if isProduction {
@@ -91,7 +99,9 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 	nClient.certId = certificate.SerialNumber.String()
 
 	nClient.version = kVersion
-	nClient.signMethod = kSignMehtod
+	nClient.signMethod = kSignMethod
+
+	nClient.frontTransTpl = tpl
 
 	nClient.signer = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, privateKey, nil)))
 	nClient.verifiers = make(map[string]Verifier)
@@ -189,13 +199,13 @@ func (this *Client) URLValues(values url.Values) (url.Values, error) {
 	return values, nil
 }
 
-func (this *Client) Request(payload *Payload) (url.Values, error) {
-	values, err := this.URLValues(payload.values)
+func (this *Client) Request(api string, values url.Values) (url.Values, error) {
+	values, err := this.URLValues(values)
 	if err != nil {
 		return nil, err
 	}
 
-	var req = ngx.NewRequest(http.MethodPost, this.host+payload.api, ngx.WithClient(this.Client))
+	var req = ngx.NewRequest(http.MethodPost, this.host+api, ngx.WithClient(this.Client))
 	req.SetParams(values)
 
 	rsp, err := req.Do(context.Background())

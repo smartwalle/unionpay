@@ -2,7 +2,6 @@ package unionpay
 
 import (
 	"bytes"
-	"html/template"
 	"net/url"
 )
 
@@ -10,40 +9,24 @@ const (
 	kFrontTrans = "/gateway/api/frontTransReq.do"
 )
 
-const (
-	kFrontTransTemplate = `
-<html>
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>
-<body>
-<form id="pay_form" action="{{.Action}}" method="POST">
-{{range $k, $v := .Values}}
-<input type="hidden" name="{{$k}}" id="{{$k}}" value="{{index $v 0}}" />
-{{end}}
-</form>
-<script type="text/javascript">
-document.getElementById("pay_form").submit();
-</script>
-</body>
-</html>
-`
-)
-
-// FrontTrans 消费接口 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
-func (this *Client) FrontTrans(orderId string) (string, error) {
+// FrontConsume 消费接口 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
+func (this *Client) FrontConsume(orderId, amount, frontURL, backURL string, opts ...CallOption) (string, error) {
 	var values = url.Values{}
-	values.Set("orderId", orderId)
-	values.Set("currencyCode", "156")
-	values.Set("txnAmt", "156")
-
-	values.Set("frontUrl", "156")
-	values.Set("backUrl", "156")
-
-	values.Set("bizType", "000201")
-	values.Set("txnType", "01")
-	values.Set("txnSubType", "01")
 	values.Set("accessType", "0")
-	values.Set("channelType", "07")
+	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
+	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	values.Set("txnSubType", "01")
+	for _, opt := range opts {
+		if opt != nil {
+			opt(values)
+		}
+	}
+	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "01")
+	values.Set("orderId", orderId)
+	values.Set("txnAmt", amount)
+	values.Set("frontUrl", frontURL)
+	values.Set("backUrl", backURL)
 
 	values, err := this.URLValues(values)
 	if err != nil {
@@ -51,9 +34,7 @@ func (this *Client) FrontTrans(orderId string) (string, error) {
 	}
 
 	var buff = bytes.NewBufferString("")
-	tpl, err := template.New("").Parse(kFrontTransTemplate)
-
-	tpl.Execute(buff, map[string]interface{}{
+	this.frontTransTpl.Execute(buff, map[string]interface{}{
 		"Values": values,
 		"Action": this.host + kFrontTrans,
 	})

@@ -26,7 +26,7 @@ func main() {
 	fmt.Println(client.Query("3619268148194181120"))
 
 	http.HandleFunc("/pay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var html, _ = client.FrontTrans(fmt.Sprintf("%d", xid.Next()))
+		var html, _ = client.FrontConsume(fmt.Sprintf("%d", xid.Next()), "100", "http://127.0.0.1:9091/pay/front", "http://127.0.0.1:9091/pay/back")
 		writer.Write([]byte(html))
 	})
 

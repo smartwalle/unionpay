@@ -10,8 +10,25 @@ const (
 	kProductionGateway = "https://gateway.95516.com"
 
 	kVersion    = "5.1.0"
-	kSignMehtod = "01"
+	kSignMethod = "01"
 )
+
+const kFrontTransTemplate = `
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>
+<body>
+<form id="pay_form" action="{{.Action}}" method="POST">
+{{range $k, $v := .Values}}
+<input type="hidden" name="{{$k}}" id="{{$k}}" value="{{index $v 0}}" />
+{{end}}
+</form>
+<script type="text/javascript">
+document.getElementById("pay_form").submit();
+</script>
+</body>
+</html>
+`
 
 type Code string
 
@@ -45,13 +62,11 @@ func (this Error) IsFailure() bool {
 }
 
 type Payload struct {
-	api    string
 	values url.Values
 }
 
-func NewPayload(api string) *Payload {
+func NewPayload() *Payload {
 	var nPayload = &Payload{}
-	nPayload.api = api
 	nPayload.values = url.Values{}
 	return nPayload
 }
@@ -61,4 +76,16 @@ func (this *Payload) Set(key, value string) *Payload {
 		this.values.Set(key, value)
 	}
 	return this
+}
+
+type CallOption func(values url.Values)
+
+func WithPayload(payload *Payload) CallOption {
+	return func(values url.Values) {
+		if payload != nil {
+			for key := range payload.values {
+				values.Set(key, payload.values.Get(key))
+			}
+		}
+	}
 }
