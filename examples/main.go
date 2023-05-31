@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/smartwalle/unionpay"
 	"github.com/smartwalle/xid"
@@ -26,20 +27,31 @@ func main() {
 		return
 	}
 
+	http.HandleFunc("/unionpay", func(writer http.ResponseWriter, request *http.Request) {
+		var html = `
+<html>
+<head>
+</head>
+<body>
+<a href="/unionpay/web">web</a>
+<a href="/unionpay/app">app</a>
+</body>
+</html>`
+		writer.Write([]byte(html))
+	})
+
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
 		var orderId = fmt.Sprintf("%d", xid.Next())
 		var html, txnTime, _ = client.CreateWebPayment(orderId, "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
 		writer.Write([]byte(html))
-		fmt.Println(orderId, txnTime)
 		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
-		var orderId = fmt.Sprintf("%d", xid.Next())
-		var tn, txnTime, _ = client.CreateAppPayment(orderId, "100", kServerDomain+"/union/back")
-		writer.Write([]byte(tn))
-		fmt.Println(orderId, txnTime)
-		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
+		var payment, _ = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
+		var data, _ = json.Marshal(payment)
+		writer.Write(data)
+		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
 	})
 
 	http.HandleFunc("/unionpay/query", func(writer http.ResponseWriter, request *http.Request) {
@@ -48,12 +60,14 @@ func main() {
 		var orderId = request.Form.Get("order_id")
 		var txnTime = request.Form.Get("txn_time")
 
-		var payment, err = client.GetTransaction(orderId, txnTime)
+		var transaction, err = client.GetTransaction(orderId, txnTime)
 		if err != nil {
 			fmt.Println("查询错误:", err)
 			return
 		}
-		fmt.Printf("%v \n", payment)
+
+		var data, _ = json.Marshal(transaction)
+		writer.Write(data)
 	})
 
 	http.HandleFunc("/unionpay/front", func(writer http.ResponseWriter, request *http.Request) {
@@ -70,19 +84,19 @@ func main() {
 	})
 
 	http.HandleFunc("/unionpay/back", func(writer http.ResponseWriter, request *http.Request) {
-		var notification, err = client.DecodeNotification(request)
+		request.ParseForm()
+
+		var notification, err = client.DecodeNotification(request.Form)
 		if err != nil {
 			fmt.Println("验证通知签名失败")
 			writer.WriteHeader(http.StatusBadRequest)
-			writer.Write([]byte("bad"))
 			return
 		}
 		fmt.Println("验证通知签名成功")
 
 		fmt.Println(notification)
 
-		writer.WriteHeader(http.StatusOK)
-		writer.Write([]byte("ok"))
+		client.ACKNotification(writer)
 	})
 
 	http.ListenAndServe(":9988", nil)

@@ -15,7 +15,7 @@ const (
 )
 
 // CreateWebPayment 消费接口-创建网页支付。
-// 第一个返回值为 HTML 代码，需要在浏览器中执行该代码以打开银联支付；第二个返回值为交易状态查询接口(GetTransaction)查询需要用到的 txnTime。
+// 第一个返回值为 HTML 代码，需要在浏览器中执行该代码以打开银联支付；第二个返回值为调用交易状态查询接口(GetTransaction)需要用到的 txnTime。
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
 //
 // orderId：商户消费订单号。
@@ -58,7 +58,6 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 }
 
 // CreateAppPayment 消费接口-创建 App 支付。
-// 第一个返回值为客户端调用银联 SDK 需要的 tn；第二个返回值为交易状态查询接口(GetTransaction)查询需要用到的 txnTime。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?apiservId=3021&acpAPIId=961&bussType=0
 //
@@ -67,7 +66,7 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 // amount：交易金额，单位分，不要带小数点。
 //
 // backURL：后台通知地址。
-func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...CallOption) (string, string, error) {
+func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...CallOption) (*AppPayment, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
@@ -87,10 +86,14 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 
 	var rValues, err = this.Request(kAppTrans, values)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
-	return rValues.Get("tn"), rValues.Get("txnTime"), nil
+	var payment *AppPayment
+	if err = internal.DecodeValues(rValues, &payment); err != nil {
+		return nil, err
+	}
+	return payment, nil
 }
 
 // GetTransaction 交易状态查询接口

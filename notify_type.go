@@ -30,6 +30,8 @@ type PaymentNotification struct {
 	BindId             string `query:"bindId"`             // 绑定标识号
 	InstalTransInfo    string `query:"instalTransInfo"`    // 分期付款信息域
 	Version            string `query:"version"`            // 版本号
+	CardDigest         string `query:"cardDigest"`         // 真实卡号摘要 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=961&apiservId=3021&version=V1.0&bussType=0#nav08
+	IssAddnData        string `json:"issAddnData"`         // 订单优惠信息 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=961&apiservId=3021&version=V1.0&bussType=0#nav08
 }
 
 type RevokeNotification struct {

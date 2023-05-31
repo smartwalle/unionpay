@@ -1,10 +1,9 @@
 package unionpay
 
 import (
-	"errors"
-	"fmt"
 	"github.com/smartwalle/unionpay/internal"
 	"net/http"
+	"net/url"
 )
 
 // DecodeNotification 解析通知
@@ -16,41 +15,63 @@ import (
 // *RevokeNotification
 //
 // *RefundNotification
-func (this *Client) DecodeNotification(req *http.Request) (interface{}, error) {
-	if req == nil {
-		return nil, errors.New("request 参数不能为空")
-	}
-	if err := req.ParseForm(); err != nil {
+func (this *Client) DecodeNotification(values url.Values) (interface{}, error) {
+	if err := this.VerifySign(values); err != nil {
 		return nil, err
 	}
 
-	if err := this.VerifySign(req.Form); err != nil {
-		return nil, err
-	}
-
-	fmt.Println(req.Form)
-
-	var txnType = req.Form.Get("txnType")
+	var txnType = values.Get("txnType")
 	switch txnType {
 	case "01":
-		var notification *PaymentNotification
-		if err := internal.DecodeValues(req.Form, &notification); err != nil {
-			return nil, err
-		}
-		return notification, nil
+		return DecodePaymentNotification(values)
 	case "04":
-		var notification *RevokeNotification
-		if err := internal.DecodeValues(req.Form, &notification); err != nil {
-			return nil, err
-		}
-		return notification, nil
+		return DecodeRevokeNotification(values)
 	case "31":
-		var notification *RefundNotification
-		if err := internal.DecodeValues(req.Form, &notification); err != nil {
-			return nil, err
-		}
-		return notification, nil
+		return DecodeRefundNotification(values)
 	}
 
 	return nil, nil
+}
+
+func (this *Client) ACKNotification(w http.ResponseWriter) {
+	ACKNotification(w)
+}
+
+// ACKNotification 返回异步通知成功处理的消息给银联。
+//
+// 后台通知以标准的HTTP协议的POST方法向商户的后台通知URL发送，超时时间为10秒。
+//
+// 由于网络等原因，商户可能会收到重复的后台通知，商户应能正确识别并处理。
+//
+// 商户返回码为200时，银联判定为通知成功，其他返回码为通知失败。
+//
+// 如10秒内未收到应答，银联判定为通知失败。
+//
+// 第一次通知失败后，银联会重发，最多发送五次（间隔1、2、4、5分钟）。
+func ACKNotification(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusOK)
+}
+
+func DecodePaymentNotification(values url.Values) (*PaymentNotification, error) {
+	var notification *PaymentNotification
+	if err := internal.DecodeValues(values, &notification); err != nil {
+		return nil, err
+	}
+	return notification, nil
+}
+
+func DecodeRevokeNotification(values url.Values) (*RevokeNotification, error) {
+	var notification *RevokeNotification
+	if err := internal.DecodeValues(values, &notification); err != nil {
+		return nil, err
+	}
+	return notification, nil
+}
+
+func DecodeRefundNotification(values url.Values) (*RefundNotification, error) {
+	var notification *RefundNotification
+	if err := internal.DecodeValues(values, &notification); err != nil {
+		return nil, err
+	}
+	return notification, nil
 }
