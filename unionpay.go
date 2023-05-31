@@ -134,7 +134,7 @@ func NewWithPFXFile(filename, password, merchantId string, isProduction bool) (*
 func (this *Client) loadRootCert(b []byte) error {
 	cert, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
-		return nil
+		return err
 	}
 	this.rootCert = cert
 	return nil
@@ -158,7 +158,7 @@ func (this *Client) LoadRootCertFromFile(filename string) error {
 func (this *Client) loadIntermediateCert(b []byte) error {
 	cert, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
-		return nil
+		return err
 	}
 	this.interCert = cert
 	return nil
