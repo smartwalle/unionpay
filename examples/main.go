@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/smartwalle/unionpay"
 	"github.com/smartwalle/xid"
+	"log"
 	"net/http"
 )
 
@@ -12,18 +13,20 @@ import (
 const kServerDomain = "http://127.0.0.1:9988"
 
 func main() {
+	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
+
 	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058110048", false)
 	if err != nil {
-		fmt.Println("初始化银联支付失败, 错误信息为", err)
+		log.Println("初始化银联支付失败, 错误信息为", err)
 		return
 	}
 
 	if err = client.LoadRootCertFromFile("./acp_test_root.cer"); err != nil {
-		fmt.Println("加载证书发生错误", err)
+		log.Println("加载证书发生错误", err)
 		return
 	}
 	if err = client.LoadIntermediateCertFromFile("./acp_test_middle.cer"); err != nil {
-		fmt.Println("加载证书发生错误", err)
+		log.Println("加载证书发生错误", err)
 		return
 	}
 
@@ -48,7 +51,7 @@ func main() {
 		}
 
 		writer.Write([]byte(payment.HTML))
-		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
+		log.Printf("查询交易状态：%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
@@ -60,7 +63,7 @@ func main() {
 
 		var data, _ = json.Marshal(payment)
 		writer.Write(data)
-		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
+		log.Printf("查询交易状态：%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
 	})
 
 	http.HandleFunc("/unionpay/query", func(writer http.ResponseWriter, request *http.Request) {
@@ -71,7 +74,7 @@ func main() {
 
 		var transaction, err = client.GetTransaction(orderId, txnTime)
 		if err != nil {
-			fmt.Println("查询错误:", err)
+			log.Println("查询错误:", err)
 			return
 		}
 
@@ -83,13 +86,14 @@ func main() {
 		request.ParseForm()
 
 		if err = client.VerifySign(request.Form); err != nil {
+			log.Println("验证签名失败：", err)
 			writer.Write([]byte(err.Error()))
 			return
 		}
 		writer.WriteHeader(http.StatusOK)
 		writer.Write([]byte("Good"))
 
-		fmt.Println(request.Form)
+		log.Println(request.Form)
 	})
 
 	http.HandleFunc("/unionpay/back", func(writer http.ResponseWriter, request *http.Request) {
@@ -97,16 +101,17 @@ func main() {
 
 		var notification, err = client.DecodeNotification(request.Form)
 		if err != nil {
-			fmt.Println("验证通知签名失败")
+			log.Println("验证签名失败：", err)
 			writer.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		fmt.Println("验证通知签名成功")
+		log.Println("验证通知签名成功")
 
-		fmt.Println(notification)
+		log.Println(notification)
 
 		client.ACKNotification(writer)
 	})
 
+	log.Println(kServerDomain + "/unionpay")
 	http.ListenAndServe(":9988", nil)
 }
