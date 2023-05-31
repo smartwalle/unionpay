@@ -45,10 +45,23 @@ package unionpay
 // 08：移动
 // 16：数字机顶盒
 
+type WebPayment struct {
+	Error
+	HTML       string // 银联支付表单 HTML 代码，需要在浏览器中执行该代码以打开银联支付
+	Version    string // 版本号
+	BizType    string // 产品类型
+	TxnTime    string // 订单发送时间
+	TxnType    string // 交易类型
+	TxnSubType string // 交易子类
+	AccessType string // 接入类型
+	MerId      string // 商户代码
+	OrderId    string // 商户订单号
+}
+
 type AppPayment struct {
 	Error
+	TN          string `query:"tn"`          // 银联受理订单号, 客户端调用银联 SDK 需要的银联订单号(tn)
 	AcqInsCode  string `query:"acqInsCode"`  // 收单机构代码
-	TN          string `query:"tn"`          // 银联受理订单号, 客户端调用银联 SDK 需要的银联订单号(tn)；
 	Version     string `query:"version"`     // 版本号
 	BizType     string `query:"bizType"`     // 产品类型
 	TxnTime     string `query:"txnTime"`     // 订单发送时间

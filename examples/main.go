@@ -9,7 +9,7 @@ import (
 )
 
 // TODO 设置回调地址域名
-const kServerDomain = ""
+const kServerDomain = "https://www.game2me.net"
 
 func main() {
 	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)
@@ -41,14 +41,23 @@ func main() {
 	})
 
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var orderId = fmt.Sprintf("%d", xid.Next())
-		var html, txnTime, _ = client.CreateWebPayment(orderId, "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
-		writer.Write([]byte(html))
-		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, orderId, txnTime)
+		var payment, err = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+			return
+		}
+
+		writer.Write([]byte(payment.HTML))
+		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
-		var payment, _ = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
+		var payment, err = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
+		if err != nil {
+			writer.Write([]byte(err.Error()))
+			return
+		}
+
 		var data, _ = json.Marshal(payment)
 		writer.Write(data)
 		fmt.Printf("%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)

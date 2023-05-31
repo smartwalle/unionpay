@@ -15,7 +15,7 @@ const (
 )
 
 // CreateWebPayment 消费接口-创建网页支付。
-// 第一个返回值为 HTML 代码，需要在浏览器中执行该代码以打开银联支付；第二个返回值为调用交易状态查询接口(GetTransaction)需要用到的 txnTime。
+//
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0
 //
 // orderId：商户消费订单号。
@@ -25,7 +25,7 @@ const (
 // frontURL：前台通知地址。
 //
 // backURL：后台通知地址。
-func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (string, string, error) {
+func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (*WebPayment, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
@@ -46,15 +46,26 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 
 	values, err := this.URLValues(values)
 	if err != nil {
-		return "", "", err
+		return nil, err
 	}
 
 	var buff = bytes.NewBufferString("")
-	this.frontTransTpl.Execute(buff, map[string]interface{}{
-		"Values": values,
-		"Action": this.host + kFrontTrans,
-	})
-	return buff.String(), values.Get("txnTime"), nil
+	if err := this.frontTransTpl.Execute(buff, map[string]interface{}{"Values": values, "Action": this.host + kFrontTrans}); err != nil {
+		return nil, err
+	}
+
+	var payment = &WebPayment{}
+	payment.Code = CodeSuccess
+	payment.HTML = buff.String()
+	payment.Version = values.Get("version")
+	payment.BizType = values.Get("bizType")
+	payment.TxnTime = values.Get("txnTime")
+	payment.TxnType = values.Get("txnType")
+	payment.TxnSubType = values.Get("txnSubType")
+	payment.AccessType = values.Get("accessType")
+	payment.MerId = values.Get("merId")
+	payment.OrderId = values.Get("orderId")
+	return payment, nil
 }
 
 // CreateAppPayment 消费接口-创建 App 支付。

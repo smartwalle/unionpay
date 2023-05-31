@@ -31,7 +31,9 @@ type PaymentNotification struct {
 	InstalTransInfo    string `query:"instalTransInfo"`    // 分期付款信息域
 	Version            string `query:"version"`            // 版本号
 	CardDigest         string `query:"cardDigest"`         // 真实卡号摘要 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=961&apiservId=3021&version=V1.0&bussType=0#nav08
-	IssAddnData        string `json:"issAddnData"`         // 订单优惠信息 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=961&apiservId=3021&version=V1.0&bussType=0#nav08
+	IssAddnData        string `query:"issAddnData"`        // 订单优惠信息 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=961&apiservId=3021&version=V1.0&bussType=0#nav08
+	TN                 string `query:"tn"`                 // 银联受理订单号 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0#nav05
+	AccSplitData       string `query:"accSplitData"`       // 分账域 https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=754&apiservId=448&version=V2.2&bussType=0#nav08
 }
 
 type RevokeNotification struct {
