@@ -54,7 +54,7 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 	}
 
 	var buff = bytes.NewBufferString("")
-	if err := this.frontTransTpl.Execute(buff, map[string]interface{}{"Values": values, "Action": this.host + kFrontTrans}); err != nil {
+	if err = this.webPaymentTpl.Execute(buff, map[string]interface{}{"Values": values, "Action": this.host + kFrontTrans}); err != nil {
 		return nil, err
 	}
 

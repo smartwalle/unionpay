@@ -51,7 +51,7 @@ type Client struct {
 	version    string
 	signMethod string
 
-	frontTransTpl *template.Template
+	webPaymentTpl *template.Template
 
 	rootCert  *x509.Certificate
 	interCert *x509.Certificate
@@ -82,12 +82,11 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 		return nil, errors.New("key is not a valid *rsa.PrivateKey")
 	}
 
-	tpl, err := template.New("").Parse(kFrontTransTemplate)
-	if err != nil {
+	var nClient = &Client{}
+	if err = nClient.LoadWebPaymentTemplate(kWebPaymentTemplate); err != nil {
 		return nil, err
 	}
 
-	var nClient = &Client{}
 	nClient.Client = http.DefaultClient
 	if isProduction {
 		nClient.host = kProductionGateway
@@ -99,8 +98,6 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 
 	nClient.version = kVersion
 	nClient.signMethod = kSignMethod
-
-	nClient.frontTransTpl = tpl
 
 	nClient.signer = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, privateKey, nil)))
 	nClient.verifiers = make(map[string]Verifier)
@@ -273,4 +270,20 @@ func (this *Client) getVerifier(cert string) (Verifier, error) {
 		this.verifiers[cert] = verifier
 	}
 	return verifier, nil
+}
+
+// LoadWebPaymentTemplate 用于加载跳转银联支付页面的网页模版。
+//
+// 网页支付需要先在浏览器中打开业务方(商户)提供的网页，通过该网页跳转到银联的支付页面。
+//
+// CreateWebPayment 方法中会构建相应的参数，然后把本方法加载的模版渲染成 HTML 代码。
+//
+// 模版参考 unionpay_type.go 文件中的 kWebPaymentTemplate 常量，该常量也是本库默认使用的模版。
+func (this *Client) LoadWebPaymentTemplate(tpl string) error {
+	nTemplate, err := template.New("").Parse(tpl)
+	if err != nil {
+		return err
+	}
+	this.webPaymentTpl = nTemplate
+	return nil
 }
