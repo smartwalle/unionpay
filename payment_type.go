@@ -45,6 +45,11 @@ package unionpay
 // 08：移动
 // 16：数字机顶盒
 
+// accessType
+// 0：商户直连接入
+// 1：收单机构接入
+// 2：平台商户接入
+
 type WebPayment struct {
 	Error
 	HTML       string // 银联支付表单 HTML 代码，需要在浏览器中执行该代码以打开银联支付

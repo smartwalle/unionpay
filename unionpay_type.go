@@ -84,7 +84,7 @@ func WithPayload(payload *Payload) CallOption {
 	return func(values url.Values) {
 		if payload != nil {
 			for key := range payload.values {
-				values.Set(key, payload.values.Get(key))
+				values[key] = payload.values[key]
 			}
 		}
 	}

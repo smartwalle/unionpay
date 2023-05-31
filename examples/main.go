@@ -9,10 +9,10 @@ import (
 )
 
 // TODO 设置回调地址域名
-const kServerDomain = ""
+const kServerDomain = "http://127.0.0.1:9988"
 
 func main() {
-	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)
+	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058110048", false)
 	if err != nil {
 		fmt.Println("初始化银联支付失败, 错误信息为", err)
 		return

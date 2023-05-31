@@ -27,6 +27,7 @@ const (
 // backURL：后台通知地址。
 func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (*WebPayment, error) {
 	var values = url.Values{}
+	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
@@ -37,8 +38,11 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 			opt(values)
 		}
 	}
+
+	// 固定参数
 	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
 	values.Set("txnType", "01")
+
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
 	values.Set("frontUrl", frontURL)
@@ -79,6 +83,7 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 // backURL：后台通知地址。
 func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...CallOption) (*AppPayment, error) {
 	var values = url.Values{}
+	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "08")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
@@ -89,8 +94,11 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 			opt(values)
 		}
 	}
+
+	// 固定参数
 	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
 	values.Set("txnType", "01")
+
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
 	values.Set("backUrl", backURL)
@@ -120,15 +128,19 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 // 若查询动作成功，即应答码为“00“，则根据“原交易应答码”即origRespCode来判断被查询交易是否成功。此时若origRespCode为00，则表示被查询交易成功。
 func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) (*Transaction, error) {
 	var values = url.Values{}
+	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
+
+	// 固定参数
 	values.Set("bizType", "000000")
 	values.Set("txnType", "00")
 	values.Set("txnSubType", "00")
+
 	values.Set("orderId", orderId)
 	values.Set("txnTime", txnTime)
 
@@ -169,6 +181,7 @@ func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) 
 // 注2：系统实际支持330天的退货，但银联对发卡行的退货支持要求仅为90天，超过90天的退货发卡行虽然也会承兑，但可能为人工处理，到账速度较慢。330天以上的退货也可能成功，但不保证一定可以成功（失败应该会同步报错4040007之类的应答码），建议直接给用户转账来退款。
 func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...CallOption) (*Revoke, error) {
 	var values = url.Values{}
+	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
@@ -178,9 +191,12 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 			opt(values)
 		}
 	}
+
+	// 固定参数
 	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
 	values.Set("txnType", "31")
 	values.Set("txnSubType", "00")
+
 	values.Set("origQryId", queryId)
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
@@ -223,6 +239,8 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 // 注2：系统实际支持330天的退货，但银联对发卡行的退货支持要求仅为90天，超过90天的退货发卡行虽然也会承兑，但可能为人工处理，到账速度较慢。330天以上的退货也可能成功，但不保证一定可以成功（失败应该会同步报错4040007之类的应答码），建议直接给用户转账来退款。
 func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...CallOption) (*Refund, error) {
 	var values = url.Values{}
+
+	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
@@ -232,9 +250,12 @@ func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...Cal
 			opt(values)
 		}
 	}
+
+	// 固定参数
 	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
 	values.Set("txnType", "04")
 	values.Set("txnSubType", "00")
+
 	values.Set("origQryId", queryId)
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
