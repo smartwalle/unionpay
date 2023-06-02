@@ -239,14 +239,7 @@ func (this *Client) VerifySign(values url.Values) error {
 		return err
 	}
 
-	if err = verifier.VerifyValues(values, signature, nsign.WithIgnore("signature")); err != nil {
-		return err
-	}
-	// 删除签名相关数据
-	values.Del("signPubKeyCert")
-	values.Del("signMethod")
-	values.Del("signature")
-	return nil
+	return verifier.VerifyValues(values, signature, nsign.WithIgnore("signature"))
 }
 
 func (this *Client) getVerifier(cert string) (Verifier, error) {

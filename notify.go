@@ -7,7 +7,9 @@ import (
 	"net/url"
 )
 
-// DecodeNotification 解析通知
+// DecodeNotification 解析通知。
+//
+// 各通知结构体会尽量包含前台通知(frontURL)和后台通知(backURL)已知字段，所以本方法可用于解析前台通知(frontURL)和后台通知(backURL)。
 //
 // 返回以下类型中的一种：
 //

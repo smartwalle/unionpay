@@ -85,15 +85,16 @@ func main() {
 	http.HandleFunc("/unionpay/front", func(writer http.ResponseWriter, request *http.Request) {
 		request.ParseForm()
 
-		if err = client.VerifySign(request.Form); err != nil {
-			log.Println("验证签名失败：", err)
-			writer.Write([]byte(err.Error()))
+		var notification, err = client.DecodeNotification(request.Form)
+		if err != nil {
+			log.Println("解析前台通知发生错误：", err)
+			fmt.Fprintln(writer, "解析前台通知发生错误：", err)
 			return
 		}
-		writer.WriteHeader(http.StatusOK)
-		writer.Write([]byte("Good"))
 
-		log.Println(request.Form)
+		writer.WriteHeader(http.StatusOK)
+		var data, _ = json.Marshal(notification)
+		writer.Write(data)
 	})
 
 	http.HandleFunc("/unionpay/back", func(writer http.ResponseWriter, request *http.Request) {
@@ -101,12 +102,11 @@ func main() {
 
 		var notification, err = client.DecodeNotification(request.Form)
 		if err != nil {
-			log.Println("验证签名失败：", err)
+			log.Println("解析后台通知失败：", err)
 			writer.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		log.Println("验证通知签名成功")
-
+		log.Println("解析后台通知成功")
 		log.Println(notification)
 
 		client.ACKNotification(writer)
