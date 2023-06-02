@@ -2,7 +2,6 @@ package unionpay
 
 import (
 	"fmt"
-	"github.com/smartwalle/unionpay/internal"
 	"net/http"
 	"net/url"
 )
@@ -57,7 +56,7 @@ func ACKNotification(w http.ResponseWriter) {
 
 func DecodePaymentNotification(values url.Values) (*PaymentNotification, error) {
 	var notification *PaymentNotification
-	if err := internal.DecodeValues(values, &notification); err != nil {
+	if err := DecodeValues(values, &notification); err != nil {
 		return nil, err
 	}
 	return notification, nil
@@ -65,7 +64,7 @@ func DecodePaymentNotification(values url.Values) (*PaymentNotification, error) 
 
 func DecodeRevokeNotification(values url.Values) (*RevokeNotification, error) {
 	var notification *RevokeNotification
-	if err := internal.DecodeValues(values, &notification); err != nil {
+	if err := DecodeValues(values, &notification); err != nil {
 		return nil, err
 	}
 	return notification, nil
@@ -73,7 +72,7 @@ func DecodeRevokeNotification(values url.Values) (*RevokeNotification, error) {
 
 func DecodeRefundNotification(values url.Values) (*RefundNotification, error) {
 	var notification *RefundNotification
-	if err := internal.DecodeValues(values, &notification); err != nil {
+	if err := DecodeValues(values, &notification); err != nil {
 		return nil, err
 	}
 	return notification, nil

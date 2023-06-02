@@ -2,7 +2,6 @@ package unionpay
 
 import (
 	"bytes"
-	"github.com/smartwalle/unionpay/internal"
 	"net/url"
 	"time"
 )
@@ -109,7 +108,7 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 	}
 
 	var payment *AppPayment
-	if err = internal.DecodeValues(rValues, &payment); err != nil {
+	if err = DecodeValues(rValues, &payment); err != nil {
 		return nil, err
 	}
 	return payment, nil
@@ -150,7 +149,7 @@ func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) 
 	}
 
 	var transaction *Transaction
-	if err = internal.DecodeValues(rValues, &transaction); err != nil {
+	if err = DecodeValues(rValues, &transaction); err != nil {
 		return nil, err
 	}
 	return transaction, nil
@@ -208,7 +207,7 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 	}
 
 	var revoke *Revoke
-	if err = internal.DecodeValues(rValues, &revoke); err != nil {
+	if err = DecodeValues(rValues, &revoke); err != nil {
 		return nil, err
 	}
 	return revoke, nil
@@ -267,7 +266,7 @@ func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...Cal
 	}
 
 	var refund *Refund
-	if err = internal.DecodeValues(rValues, &refund); err != nil {
+	if err = DecodeValues(rValues, &refund); err != nil {
 		return nil, err
 	}
 	return refund, nil
