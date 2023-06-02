@@ -60,6 +60,9 @@ type Client struct {
 	mu        sync.Mutex
 	signer    Signer
 	verifiers map[string]Verifier
+
+	// 加密&解密
+	privateKey *rsa.PrivateKey
 }
 
 // New 初始银联客户端
@@ -102,6 +105,8 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 	nClient.signer = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, privateKey, nil)))
 	nClient.verifiers = make(map[string]Verifier)
 
+	nClient.privateKey = privateKey
+
 	for _, opt := range opts {
 		if opt != nil {
 			opt(nClient)
@@ -126,6 +131,22 @@ func NewWithPFXFile(filename, password, merchantId string, isProduction bool) (*
 		return nil, err
 	}
 	return New(data, password, merchantId, isProduction)
+}
+
+// LoadWebPaymentTemplate 用于加载跳转银联支付页面的网页模版。
+//
+// 网页支付需要先在浏览器中打开业务方(商户)提供的网页，通过该网页跳转到银联的支付页面。
+//
+// CreateWebPayment 方法中会构建相应的参数，然后把本方法加载的模版渲染成 HTML 代码。
+//
+// 模版参考 unionpay_type.go 文件中的 kWebPaymentTemplate 常量，该常量也是本库默认使用的模版。
+func (this *Client) LoadWebPaymentTemplate(tpl string) error {
+	nTemplate, err := template.New("").Parse(tpl)
+	if err != nil {
+		return err
+	}
+	this.webPaymentTpl = nTemplate
+	return nil
 }
 
 func (this *Client) loadRootCert(b []byte) error {
@@ -265,18 +286,33 @@ func (this *Client) getVerifier(cert string) (Verifier, error) {
 	return verifier, nil
 }
 
-// LoadWebPaymentTemplate 用于加载跳转银联支付页面的网页模版。
+// Decrypt 用于解密从银联获取到的敏感信息。
 //
-// 网页支付需要先在浏览器中打开业务方(商户)提供的网页，通过该网页跳转到银联的支付页面。
+// 如果商户号开通了【商户对敏感信息加密】的权限，那么需要对获取到的 accNo、pin、phoneNo、cvn2、expired 进行解密。
 //
-// CreateWebPayment 方法中会构建相应的参数，然后把本方法加载的模版渲染成 HTML 代码。
+// 如果商户号未开通【商户对敏感信息加密】权限，那么不需要对敏感信息进行解密。
 //
-// 模版参考 unionpay_type.go 文件中的 kWebPaymentTemplate 常量，该常量也是本库默认使用的模版。
-func (this *Client) LoadWebPaymentTemplate(tpl string) error {
-	nTemplate, err := template.New("").Parse(tpl)
+// https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
+func (this *Client) Decrypt(s string) (string, error) {
+	var ciphertext, err = base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		return err
+		return "", nil
 	}
-	this.webPaymentTpl = nTemplate
-	return nil
+
+	ciphertext, err = ncrypto.RSADecrypt(ciphertext, this.privateKey)
+	if err != nil {
+		return "", nil
+	}
+	return string(ciphertext), nil
+}
+
+// Encrypt
+//
+// 如果商户号开通了【商户对敏感信息加密】的权限，那么需要对提交的 accNo、pin、phoneNo、cvn2、expired 进行加密。
+//
+// 如果商户号未开通【商户对敏感信息加密】权限，那么不需要对敏感信息进行加密。
+//
+// https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
+func (this *Client) Encrypt(s string) (string, error) {
+	return "", errors.New("method Encrypt not implemented")
 }

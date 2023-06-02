@@ -92,6 +92,15 @@ func main() {
 			return
 		}
 
+		switch nType := notification.(type) {
+		case *unionpay.PaymentNotification:
+			// 测试对敏感信息解密
+			accNo, err := client.Decrypt(nType.AccNo)
+			if err == nil {
+				nType.AccNo = accNo
+			}
+		}
+
 		writer.WriteHeader(http.StatusOK)
 		var data, _ = json.Marshal(notification)
 		writer.Write(data)
