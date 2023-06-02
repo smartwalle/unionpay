@@ -30,6 +30,12 @@ func main() {
 		return
 	}
 
+	// 加载敏感信息加密密钥
+	if err = client.LoadEncryptKey(); err != nil {
+		log.Println("加载敏感信息加密密钥发生错误", err)
+		return
+	}
+
 	http.HandleFunc("/unionpay", func(writer http.ResponseWriter, request *http.Request) {
 		var html = `
 <html>

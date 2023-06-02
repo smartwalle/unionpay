@@ -18,6 +18,7 @@ import (
 	"os"
 	"sync"
 	"text/template"
+	"time"
 )
 
 type Signer interface {
@@ -61,8 +62,10 @@ type Client struct {
 	signer    Signer
 	verifiers map[string]Verifier
 
-	// 加密&解密
-	privateKey *rsa.PrivateKey
+	// 敏感信息加密&解密
+	decryptPrivateKey *rsa.PrivateKey
+	encryptPublicKey  *rsa.PublicKey
+	encryptCertId     string
 }
 
 // New 初始银联客户端
@@ -105,7 +108,7 @@ func New(pfx []byte, password, merchantId string, isProduction bool, opts ...Opt
 	nClient.signer = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, privateKey, nil)))
 	nClient.verifiers = make(map[string]Verifier)
 
-	nClient.privateKey = privateKey
+	nClient.decryptPrivateKey = privateKey
 
 	for _, opt := range opts {
 		if opt != nil {
@@ -196,6 +199,44 @@ func (this *Client) LoadIntermediateCertFromFile(filename string) error {
 	return this.loadIntermediateCert(b)
 }
 
+// LoadEncryptKey 银联加密公钥更新查询接口。
+//
+// 商户定期（1天1次）向银联全渠道系统发起获取加密公钥信息交易。在加密公钥证书更新期间，全渠道系统支持新老证书的共同使用，新老证书并行期为1个月。全渠道系统向商户返回最新的加密公钥证书，由商户服务器替换本地证书。
+//
+// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=758&apiservId=448&version=V2.2&bussType=0
+func (this *Client) LoadEncryptKey() error {
+	certificate, err := this.getEncryptCertificate()
+	if err != nil {
+		return err
+	}
+	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
+	this.encryptCertId = certificate.SerialNumber.String()
+	return nil
+}
+
+func (this *Client) getEncryptCertificate() (*x509.Certificate, error) {
+	var values = url.Values{}
+	values.Set("accessType", "0")
+	values.Set("channelType", "07") // 渠道类型
+	values.Set("txnType", "95")     // 交易类型 95-银联加密公钥更新查询
+	values.Set("txnSubType", "00")  // 交易子类型 默认00
+	values.Set("bizType", "000000") // 业务类型  默认
+	values.Set("certType", "01")    // 01：敏感信息加密公钥(只有01可用)
+	values.Set("orderId", time.Now().Format("20060102150405"))
+	values.Set("txnTime", time.Now().Format("20060102150405"))
+
+	var rValues, err = this.Request(kBackTrans, values)
+	if err != nil {
+		return nil, err
+	}
+	var cert = rValues.Get("encryptPubKeyCert")
+	certificate, err := ncrypto.DecodeCertificate([]byte(cert))
+	if err != nil {
+		return nil, err
+	}
+	return certificate, nil
+}
+
 func (this *Client) URLValues(values url.Values) (url.Values, error) {
 	if values == nil {
 		values = url.Values{}
@@ -268,7 +309,6 @@ func (this *Client) getVerifier(cert string) (Verifier, error) {
 	defer this.mu.Unlock()
 
 	var verifier = this.verifiers[cert]
-
 	if verifier == nil {
 		certificate, err := ncrypto.DecodeCertificate([]byte(cert))
 		if err != nil {
@@ -280,7 +320,6 @@ func (this *Client) getVerifier(cert string) (Verifier, error) {
 		}
 
 		verifier = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, nil, certificate.PublicKey.(*rsa.PublicKey))))
-
 		this.verifiers[cert] = verifier
 	}
 	return verifier, nil
@@ -299,14 +338,14 @@ func (this *Client) Decrypt(s string) (string, error) {
 		return "", nil
 	}
 
-	ciphertext, err = ncrypto.RSADecrypt(ciphertext, this.privateKey)
+	ciphertext, err = ncrypto.RSADecrypt(ciphertext, this.decryptPrivateKey)
 	if err != nil {
 		return "", nil
 	}
 	return string(ciphertext), nil
 }
 
-// Encrypt
+// Encrypt 用于加密敏感信息。
 //
 // 如果商户号开通了【商户对敏感信息加密】的权限，那么需要对提交的 accNo、pin、phoneNo、cvn2、expired 进行加密。
 //
@@ -314,5 +353,20 @@ func (this *Client) Decrypt(s string) (string, error) {
 //
 // https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
 func (this *Client) Encrypt(s string) (string, error) {
-	return "", errors.New("method Encrypt not implemented")
+	if this.encryptPublicKey == nil || this.encryptCertId == "" {
+		return "", errors.New("public key not found, you need to call LoadEncryptKey() first")
+	}
+
+	var ciphertext, err = ncrypto.RSAEncrypt([]byte(s), this.encryptPublicKey)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
+}
+
+// EncryptCertId 获取敏感信息加密证书 id。
+//
+// 用于各接口中的 encryptCertId 字段。
+func (this *Client) EncryptCertId() string {
+	return this.encryptCertId
 }
