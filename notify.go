@@ -1,6 +1,7 @@
 package unionpay
 
 import (
+	"fmt"
 	"github.com/smartwalle/unionpay/internal"
 	"net/http"
 	"net/url"
@@ -30,7 +31,7 @@ func (this *Client) DecodeNotification(values url.Values) (interface{}, error) {
 		return DecodeRefundNotification(values)
 	}
 
-	return nil, nil
+	return nil, fmt.Errorf("unknown txnType %s", txnType)
 }
 
 func (this *Client) ACKNotification(w http.ResponseWriter) {

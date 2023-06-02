@@ -15,7 +15,7 @@ const kServerDomain = "http://127.0.0.1:9988"
 func main() {
 	log.SetFlags(log.Ldate | log.Ltime | log.Llongfile)
 
-	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058110048", false)
+	var client, err = unionpay.NewWithPFXFile("./acp_test_sign.pfx", "000000", "777290058165621", false)
 	if err != nil {
 		log.Println("初始化银联支付失败, 错误信息为", err)
 		return
