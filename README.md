@@ -16,7 +16,7 @@ import github.com/smartwalle/unionpay
 
 ## 帮助
 
-在集成的过程中有遇到问题，欢迎加 QQ 群 564704807 讨论。
+在集成的过程中有遇到问题，欢迎加 QQ 群 203357977 讨论。
 
 #### 关于错误 x509: certificate signed by unknown authority (possibly because of "x509: cannot verify signature: insecure algorithm SHA1-RSA (temporarily override with GODEBUG=x509sha1=1)" while trying to verify candidate authority certificate "CFCA TEST OCA1")
 
