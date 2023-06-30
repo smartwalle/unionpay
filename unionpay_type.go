@@ -71,7 +71,7 @@ func NewPayload() *Payload {
 	return nPayload
 }
 
-func (this *Payload) Set(key, value string) *Payload {
+func (this *Payload) AddParam(key, value string) *Payload {
 	if key != "" && value != "" {
 		this.values.Set(key, value)
 	}
