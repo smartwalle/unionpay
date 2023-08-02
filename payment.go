@@ -213,7 +213,7 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 	return revoke, nil
 }
 
-// Refund 退货接口接口。
+// Refund 退货接口。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=756&apiservId=448&version=V2.2&bussType=0
 //
