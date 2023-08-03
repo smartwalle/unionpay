@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"text/template"
 	"time"
@@ -199,22 +200,12 @@ func (this *Client) LoadIntermediateCertFromFile(filename string) error {
 	return this.loadIntermediateCert(b)
 }
 
-// LoadEncryptKey 银联加密公钥更新查询接口。
+// LoadEncryptKey 银联加密公钥更新查询接口（敏感加密证书）。
 //
 // 商户定期（1天1次）向银联全渠道系统发起获取加密公钥信息交易。在加密公钥证书更新期间，全渠道系统支持新老证书的共同使用，新老证书并行期为1个月。全渠道系统向商户返回最新的加密公钥证书，由商户服务器替换本地证书。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=758&apiservId=448&version=V2.2&bussType=0
 func (this *Client) LoadEncryptKey() error {
-	certificate, err := this.getEncryptCertificate()
-	if err != nil {
-		return err
-	}
-	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
-	this.encryptCertId = certificate.SerialNumber.String()
-	return nil
-}
-
-func (this *Client) getEncryptCertificate() (*x509.Certificate, error) {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("channelType", "07") // 渠道类型
@@ -227,10 +218,37 @@ func (this *Client) getEncryptCertificate() (*x509.Certificate, error) {
 
 	var rValues, err = this.Request(kBackTrans, values)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	var cert = rValues.Get("encryptPubKeyCert")
-	certificate, err := ncrypto.DecodeCertificate([]byte(cert))
+	var cert = strings.ReplaceAll(rValues.Get("encryptPubKeyCert"), "\r", "\n")
+
+	certificate, err := this.decodeCertificate([]byte(cert))
+	if err != nil {
+		return err
+	}
+	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
+	this.encryptCertId = certificate.SerialNumber.String()
+	return nil
+}
+
+// LoadEncryptKeyFromFile 从文件加载银联敏感加密证书。
+func (this *Client) LoadEncryptKeyFromFile(filename string) error {
+	b, err := os.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	certificate, err := this.decodeCertificate(b)
+	if err != nil {
+		return err
+	}
+	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
+	this.encryptCertId = certificate.SerialNumber.String()
+	return nil
+}
+
+func (this *Client) decodeCertificate(b []byte) (*x509.Certificate, error) {
+	certificate, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
 		return nil, err
 	}
