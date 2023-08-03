@@ -6,7 +6,9 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/base64"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/smartwalle/ncrypto"
 	"github.com/smartwalle/ncrypto/pkcs12"
 	"github.com/smartwalle/ngx"
@@ -371,11 +373,15 @@ func (this *Client) Decrypt(s string) (string, error) {
 //
 // https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
 func (this *Client) Encrypt(s string) (string, error) {
+	return this.EncryptBytes([]byte(s))
+}
+
+func (this *Client) EncryptBytes(b []byte) (string, error) {
 	if this.encryptPublicKey == nil || this.encryptCertId == "" {
 		return "", errors.New("public key not found, you need to call LoadEncryptKey() first")
 	}
 
-	var ciphertext, err = ncrypto.RSAEncrypt([]byte(s), this.encryptPublicKey)
+	var ciphertext, err = ncrypto.RSAEncrypt(b, this.encryptPublicKey)
 	if err != nil {
 		return "", err
 	}
@@ -387,4 +393,25 @@ func (this *Client) Encrypt(s string) (string, error) {
 // 用于各接口中的 encryptCertId 字段。
 func (this *Client) EncryptCertId() string {
 	return this.encryptCertId
+}
+
+// PINBlock https://paymentcardtools.com/pin-block-calculators/iso9564-format-0
+func PINBlock(pan, pin string) []byte {
+	pan = "0000" + string(pan[len(pan)-13:len(pan)-1])
+	pin = fmt.Sprintf("0%d%s", len(pin), pin)
+
+	var blockLen = 8
+
+	var pinBytes, _ = hex.DecodeString(pin)
+	for i := blockLen / 2; i < blockLen; i++ {
+		pinBytes = append(pinBytes, 0xff)
+	}
+
+	var panBytes, _ = hex.DecodeString(pan)
+
+	var block = make([]byte, 8)
+	for i := 0; i < blockLen; i++ {
+		block[i] = pinBytes[i] ^ panBytes[i]
+	}
+	return block
 }
