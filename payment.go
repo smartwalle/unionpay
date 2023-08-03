@@ -30,17 +30,15 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
-	values.Set("txnSubType", "01")    // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
+	values.Set("bizType", "000201")   // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "01")
+	values.Set("txnSubType", "01") // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
-	values.Set("txnType", "01")
 
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
@@ -86,17 +84,15 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "08")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
-	values.Set("txnSubType", "01")    // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
+	values.Set("bizType", "000201")   // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "01")
+	values.Set("txnSubType", "01") // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
-	values.Set("txnType", "01")
 
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
@@ -129,16 +125,14 @@ func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) 
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
+	values.Set("bizType", "000000")
+	values.Set("txnType", "00")
+	values.Set("txnSubType", "00")
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000000")
-	values.Set("txnType", "00")
-	values.Set("txnSubType", "00")
 
 	values.Set("orderId", orderId)
 	values.Set("txnTime", txnTime)
@@ -184,17 +178,15 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	values.Set("bizType", "000201")   // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "31")
+	values.Set("txnSubType", "00")
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
-	values.Set("txnType", "31")
-	values.Set("txnSubType", "00")
 
 	values.Set("origQryId", queryId)
 	values.Set("orderId", orderId)
@@ -243,17 +235,15 @@ func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...Cal
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	values.Set("bizType", "000201")   // 业务类型，000201 - B2C网关支付和手机wap支付
+	values.Set("txnType", "04")
+	values.Set("txnSubType", "00")
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 	for _, opt := range opts {
 		if opt != nil {
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000201") // 业务类型，000201 - B2C网关支付和手机wap支付
-	values.Set("txnType", "04")
-	values.Set("txnSubType", "00")
 
 	values.Set("origQryId", queryId)
 	values.Set("orderId", orderId)

@@ -24,7 +24,9 @@ func (this *Client) CreateCardPayment(orderId, amount, backURL, accNo string, cu
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
-	values.Set("txnSubType", "01")    // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
+	values.Set("bizType", "000301")   // 业务类型，000301 - 认证支付2.0
+	values.Set("txnType", "01")
+	values.Set("txnSubType", "01") // 01：自助消费，通过地址的方式区分前台消费和后台消费（含无跳转支付） 03：分期付款
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 	values.Set("accType", "01") // 账号类型 后台类交易且卡号上送； 跨行收单且收单机构收集银行卡信息时上送 01：银行卡 02：存折 03：IC卡 默认取值：01 取值“03”表示以IC终端发起的IC卡交易，IC作为普通银行卡进行支付时，此域填写为“01”
 	for _, opt := range opts {
@@ -32,10 +34,6 @@ func (this *Client) CreateCardPayment(orderId, amount, backURL, accNo string, cu
 			opt(values)
 		}
 	}
-
-	// 固定参数
-	values.Set("bizType", "000301") // 业务类型，000301 - 认证支付2.0
-	values.Set("txnType", "01")
 
 	values.Set("orderId", orderId)
 	values.Set("txnAmt", amount)
