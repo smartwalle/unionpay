@@ -365,7 +365,14 @@ func (this *Client) Decrypt(s string) (string, error) {
 	return string(ciphertext), nil
 }
 
-// Encrypt 用于加密敏感信息。
+// EncryptCertId 获取敏感信息加密证书 id。
+//
+// 用于各接口中的 encryptCertId 字段。
+func (this *Client) EncryptCertId() string {
+	return this.encryptCertId
+}
+
+// Encrypt 对数据进行加密，并对加密的结果使用 base64 进行编码，（用于加密敏感信息）。
 //
 // 如果商户号开通了【商户对敏感信息加密】的权限，那么需要对提交的 accNo、pin、phoneNo、cvn2、expired 进行加密。
 //
@@ -388,11 +395,9 @@ func (this *Client) EncryptBytes(b []byte) (string, error) {
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-// EncryptCertId 获取敏感信息加密证书 id。
-//
-// 用于各接口中的 encryptCertId 字段。
-func (this *Client) EncryptCertId() string {
-	return this.encryptCertId
+// EncryptPIN 对 PIN 进行加密，并对加密的结果使用 base64 进行编码。
+func (this *Client) EncryptPIN(pan, pin string) (string, error) {
+	return this.EncryptBytes(PINBlock(pan, pin))
 }
 
 // PINBlock https://paymentcardtools.com/pin-block-calculators/iso9564-format-0
