@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// CreateCardPayment 消费接口-无跳转支付。
+// CreateAccountPayment 消费接口-无跳转支付。
 //
 // orderId：商户消费订单号。
 //
@@ -13,12 +13,12 @@ import (
 //
 // backURL：后台通知地址。
 //
-// accNo：卡号。
+// accNo：账号、卡号。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=814&apiservId=449&version=V2.2&bussType=0
 //
 // 文档地址：https://open.unionpay.com/upload/download/%E6%97%A0%E8%B7%B3%E8%BD%AC%E6%94%AF%E4%BB%98%E4%BA%A7%E5%93%81%E6%8E%A5%E5%8F%A3%E8%A7%84%E8%8C%83V2.0.pdf
-func (this *Client) CreateCardPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*CardPayment, error) {
+func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -57,7 +57,7 @@ func (this *Client) CreateCardPayment(orderId, amount, backURL, accNo string, cu
 		return nil, err
 	}
 
-	var payment *CardPayment
+	var payment *AccountPayment
 	if err = DecodeValues(rValues, &payment); err != nil {
 		return nil, err
 	}

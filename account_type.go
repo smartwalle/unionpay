@@ -1,6 +1,6 @@
 package unionpay
 
-type CardPayment struct {
+type AccountPayment struct {
 	Error
 	QueryId      string `query:"queryId"`      // 查询流水号
 	AcqInsCode   string `query:"acqInsCode"`   // 收单机构代码

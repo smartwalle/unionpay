@@ -44,7 +44,7 @@ func main() {
 <body>
 <a href="/unionpay/web">web</a>
 <a href="/unionpay/app">app</a>
-<a href="/unionpay/card">card</a>
+<a href="/unionpay/account">account</a>
 </body>
 </html>`
 		writer.Write([]byte(html))
@@ -73,11 +73,11 @@ func main() {
 		log.Printf("查询交易状态：%s/unionpay/query?order_id=%s&txn_time=%s \n", kServerDomain, payment.OrderId, payment.TxnTime)
 	})
 
-	http.HandleFunc("/unionpay/card", func(writer http.ResponseWriter, request *http.Request) {
+	http.HandleFunc("/unionpay/account", func(writer http.ResponseWriter, request *http.Request) {
 		var customer = &unionpay.Customer{}
 		customer.SMSCode = "111111"
 
-		var payment, err = client.CreateCardPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/back", "6216261000000000018", customer)
+		var payment, err = client.CreateAccountPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/back", "6216261000000000018", customer)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 			return
