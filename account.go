@@ -5,7 +5,11 @@ import (
 	"time"
 )
 
-// CreateAccountPayment 消费接口-无跳转支付。
+// CreateAccountPayment 无跳转支付-消费接口。
+//
+// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=814&apiservId=449&version=V2.2&bussType=0
+//
+// 文档地址：https://open.unionpay.com/upload/download/%E6%97%A0%E8%B7%B3%E8%BD%AC%E6%94%AF%E4%BB%98%E4%BA%A7%E5%93%81%E6%8E%A5%E5%8F%A3%E8%A7%84%E8%8C%83V2.0.pdf
 //
 // orderId：商户消费订单号。
 //
@@ -14,10 +18,6 @@ import (
 // backURL：后台通知地址。
 //
 // accNo：账号、卡号。
-//
-// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=814&apiservId=449&version=V2.2&bussType=0
-//
-// 文档地址：https://open.unionpay.com/upload/download/%E6%97%A0%E8%B7%B3%E8%BD%AC%E6%94%AF%E4%BB%98%E4%BA%A7%E5%93%81%E6%8E%A5%E5%8F%A3%E8%A7%84%E8%8C%83V2.0.pdf
 func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
@@ -62,4 +62,44 @@ func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string,
 		return nil, err
 	}
 	return payment, nil
+}
+
+// ReverseAccountPayment 无跳转支付-冲正（退货）。
+//
+// 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=815&apiservId=449&version=V2.2&bussType=0
+//
+// orderId：商户订单号。
+//
+// txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，orderId 和 txnTime 组成唯一订单信息。
+//
+// 冲正必须与原始消费在同一天（准确讲是昨日23:00至本日23:00之间）。 冲正交易，仅用于超时无应答等异常场景，只有发生支付系统超时或者支付结果未知时可调用冲正，其他正常支付的订单如果需要实现相通功能，请调用消费撤销或者退货。
+func (this *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallOption) (interface{}, error) {
+	var values = url.Values{}
+	// 此处的参数可被 WithPayload() 替换
+	values.Set("accessType", "0")
+	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
+	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
+	values.Set("bizType", "000000")   // 业务类型，000301 - 认证支付2.0
+	values.Set("txnType", "99")
+	values.Set("txnSubType", "01")
+	//values.Set("txnTime", time.Now().Format("20060102150405"))
+	for _, opt := range opts {
+		if opt != nil {
+			opt(values)
+		}
+	}
+
+	values.Set("orderId", orderId)
+	values.Set("txnTime", txnTime)
+
+	var rValues, err = this.Request(kQueryTrans, values)
+	if err != nil {
+		return nil, err
+	}
+
+	var reverse *Reverse
+	if err = DecodeValues(rValues, &reverse); err != nil {
+		return nil, err
+	}
+	return reverse, nil
 }

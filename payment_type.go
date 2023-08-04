@@ -131,6 +131,7 @@ type Revoke struct {
 	ReqReserved string `query:"reqReserved"` // 请求方保留域
 	Reserved    string `query:"reserved"`    // 保留域
 	QueryId     string `query:"queryId"`     // 银联交易流水号
+	Version     string `query:"version"`     // 版本号
 }
 
 type Refund struct {
@@ -148,4 +149,5 @@ type Refund struct {
 	ReqReserved string `query:"reqReserved"` // 请求方保留域
 	Reserved    string `query:"reserved"`    // 保留域
 	QueryId     string `query:"queryId"`     // 银联交易流水号
+	Version     string `query:"version"`     // 版本号
 }

@@ -19,4 +19,19 @@ type AccountPayment struct {
 	MerId        string `query:"merId"`        // 商户代码
 	OrderId      string `query:"orderId"`      // 商户订单号
 	Reserved     string `query:"reserved"`     // 保留域
+	Version      string `query:"version"`      // 版本号
+}
+
+type Reverse struct {
+	Error
+	BizType     string `query:"bizType"`     // 产品类型
+	TxnTime     string `query:"txnTime"`     // 订单发送时间
+	TxnType     string `query:"txnType"`     // 交易类型
+	TxnSubType  string `query:"txnSubType"`  // 交易子类
+	AccessType  string `query:"accessType"`  // 接入类型
+	ReqReserved string `query:"reqReserved"` // 请求方保留域
+	MerId       string `query:"merId"`       // 商户代码
+	OrderId     string `query:"orderId"`     // 商户订单号
+	Reserved    string `query:"reserved"`    // 保留域
+	Version     string `query:"version"`     // 版本号
 }
