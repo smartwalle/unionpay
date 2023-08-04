@@ -79,7 +79,7 @@ func (this *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallO
 	values.Set("accessType", "0")
 	values.Set("currencyCode", "156") // 交易币种 156 - 人民币
 	values.Set("channelType", "07")   // 渠道类型，这个字段区分B2C网关支付和手机wap支付；07 - PC,平板  08 - 手机
-	values.Set("bizType", "000000")   // 业务类型，000301 - 认证支付2.0
+	values.Set("bizType", "000000")   // 业务类型
 	values.Set("txnType", "99")
 	values.Set("txnSubType", "01")
 	//values.Set("txnTime", time.Now().Format("20060102150405"))
