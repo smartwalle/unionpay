@@ -1,7 +1,7 @@
-github.com/smartwalle/ncrypto v1.0.2 h1:pTAhCqtPCMhpOwFXX+EcMdR6PNzruBNoGQrN2S1GbGI=
-github.com/smartwalle/ncrypto v1.0.2/go.mod h1:Dwlp6sfeNaPMnOxMNayMTacvC5JGEVln3CVdiVDgbBk=
-github.com/smartwalle/ngx v1.0.6 h1:JPNqNOIj+2nxxFtrSkJO+vKJfeNUSEQueck/Wworjps=
-github.com/smartwalle/ngx v1.0.6/go.mod h1:mx/nz2Pk5j+RBs7t6u6k22MPiBG/8CtOMpCnALIG8Y0=
+github.com/smartwalle/ncrypto v1.0.3 h1:fnzjoriZt2LZeD8ljEtRe2eU33Au7i8vIF4Gafz5RuI=
+github.com/smartwalle/ncrypto v1.0.3/go.mod h1:Dwlp6sfeNaPMnOxMNayMTacvC5JGEVln3CVdiVDgbBk=
+github.com/smartwalle/ngx v1.0.7 h1:BIQo6wmAnERehogNKUnthoxwBavTWxbR9oLFcGjWXKQ=
+github.com/smartwalle/ngx v1.0.7/go.mod h1:mx/nz2Pk5j+RBs7t6u6k22MPiBG/8CtOMpCnALIG8Y0=
 github.com/smartwalle/nhttp v0.0.8 h1:fLaD20LVPIdV0xaVtmAecDoDi3+/RB8HYrcc/j2PG0Y=
 github.com/smartwalle/nhttp v0.0.8/go.mod h1:z1TnqO08p6sR/qpbUozgGRQdWw5qzjIUbZOj3HSrL4s=
 github.com/smartwalle/nsign v1.0.8 h1:78KWtwKPrdt4Xsn+tNEBVxaTLIJBX9YRX0ZSrMUeuHo=

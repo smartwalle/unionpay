@@ -283,7 +283,7 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 	}
 
 	var req = ngx.NewRequest(http.MethodPost, this.host+api, ngx.WithClient(this.Client))
-	req.SetParams(values)
+	req.SetForm(values)
 
 	rsp, err := req.Do(context.Background())
 	if err != nil {
