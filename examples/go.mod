@@ -9,8 +9,8 @@ require (
 
 require (
 	github.com/smartwalle/ncrypto v1.0.3 // indirect
-	github.com/smartwalle/ngx v1.0.7 // indirect
-	github.com/smartwalle/nhttp v0.0.8 // indirect
+	github.com/smartwalle/ngx v1.0.8 // indirect
+	github.com/smartwalle/nhttp v0.0.9 // indirect
 	github.com/smartwalle/nsign v1.0.8 // indirect
 )
 
