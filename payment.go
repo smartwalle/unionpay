@@ -24,7 +24,7 @@ const (
 // frontURL：前台通知地址。
 //
 // backURL：后台通知地址。
-func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (*WebPayment, error) {
+func (c *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, opts ...CallOption) (*WebPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -45,13 +45,13 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 	values.Set("frontUrl", frontURL)
 	values.Set("backUrl", backURL)
 
-	values, err := this.URLValues(values)
+	values, err := c.URLValues(values)
 	if err != nil {
 		return nil, err
 	}
 
 	var buff = bytes.NewBufferString("")
-	if err = this.webPaymentTpl.Execute(buff, map[string]interface{}{"Values": values, "Action": this.host + kFrontTrans}); err != nil {
+	if err = c.webPaymentTpl.Execute(buff, map[string]interface{}{"Values": values, "Action": c.host + kFrontTrans}); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +78,7 @@ func (this *Client) CreateWebPayment(orderId, amount, frontURL, backURL string, 
 // amount：交易金额，单位分，不要带小数点。
 //
 // backURL：后台通知地址。
-func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...CallOption) (*AppPayment, error) {
+func (c *Client) CreateAppPayment(orderId, amount, backURL string, opts ...CallOption) (*AppPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -98,7 +98,7 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 	values.Set("txnAmt", amount)
 	values.Set("backUrl", backURL)
 
-	var rValues, err = this.Request(kAppTrans, values)
+	var rValues, err = c.Request(kAppTrans, values)
 	if err != nil {
 		return nil, err
 	}
@@ -121,7 +121,7 @@ func (this *Client) CreateAppPayment(orderId, amount, backURL string, opts ...Ca
 // 注：
 // 应答报文中，“应答码”即respCode字段，表示的是查询交易本身的应答，即查询这个动作是否成功，不代表被查询交易的状态；
 // 若查询动作成功，即应答码为“00“，则根据“原交易应答码”即origRespCode来判断被查询交易是否成功。此时若origRespCode为00，则表示被查询交易成功。
-func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) (*Transaction, error) {
+func (c *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) (*Transaction, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -137,7 +137,7 @@ func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) 
 	values.Set("orderId", orderId)
 	values.Set("txnTime", txnTime)
 
-	var rValues, err = this.Request(kQueryTrans, values)
+	var rValues, err = c.Request(kQueryTrans, values)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (this *Client) GetTransaction(orderId, txnTime string, opts ...CallOption) 
 // 注1：以上的天均指清算日，一般前一日23点至当天23点为一个清算日。
 //
 // 注2：系统实际支持330天的退货，但银联对发卡行的退货支持要求仅为90天，超过90天的退货发卡行虽然也会承兑，但可能为人工处理，到账速度较慢。330天以上的退货也可能成功，但不保证一定可以成功（失败应该会同步报错4040007之类的应答码），建议直接给用户转账来退款。
-func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...CallOption) (*Revoke, error) {
+func (c *Client) Revoke(queryId, orderId, amount, backURL string, opts ...CallOption) (*Revoke, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -193,7 +193,7 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 	values.Set("txnAmt", amount)
 	values.Set("backUrl", backURL)
 
-	var rValues, err = this.Request(kBackTrans, values)
+	var rValues, err = c.Request(kBackTrans, values)
 	if err != nil {
 		return nil, err
 	}
@@ -228,7 +228,7 @@ func (this *Client) Revoke(queryId, orderId, amount, backURL string, opts ...Cal
 // 注1：以上的天均指清算日，一般前一日23点至当天23点为一个清算日。
 //
 // 注2：系统实际支持330天的退货，但银联对发卡行的退货支持要求仅为90天，超过90天的退货发卡行虽然也会承兑，但可能为人工处理，到账速度较慢。330天以上的退货也可能成功，但不保证一定可以成功（失败应该会同步报错4040007之类的应答码），建议直接给用户转账来退款。
-func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...CallOption) (*Refund, error) {
+func (c *Client) Refund(queryId, orderId, amount, backURL string, opts ...CallOption) (*Refund, error) {
 	var values = url.Values{}
 
 	// 此处的参数可被 WithPayload() 替换
@@ -250,7 +250,7 @@ func (this *Client) Refund(queryId, orderId, amount, backURL string, opts ...Cal
 	values.Set("txnAmt", amount)
 	values.Set("backUrl", backURL)
 
-	var rValues, err = this.Request(kBackTrans, values)
+	var rValues, err = c.Request(kBackTrans, values)
 	if err != nil {
 		return nil, err
 	}

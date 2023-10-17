@@ -17,8 +17,8 @@ import (
 // *RevokeNotification
 //
 // *RefundNotification
-func (this *Client) DecodeNotification(values url.Values) (interface{}, error) {
-	if err := this.VerifySign(values); err != nil {
+func (c *Client) DecodeNotification(values url.Values) (interface{}, error) {
+	if err := c.VerifySign(values); err != nil {
 		return nil, err
 	}
 
@@ -35,7 +35,7 @@ func (this *Client) DecodeNotification(values url.Values) (interface{}, error) {
 	return nil, fmt.Errorf("unknown txnType %s", txnType)
 }
 
-func (this *Client) ACKNotification(w http.ResponseWriter) {
+func (c *Client) ACKNotification(w http.ResponseWriter) {
 	ACKNotification(w)
 }
 

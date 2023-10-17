@@ -51,7 +51,7 @@ import (
 //}
 
 // EncryptCustomer 对 Customer 进行编码，会对 phoneNo，cvn2，expired 进行加密。
-func (this *Client) EncryptCustomer(customer *Customer, accNo string) (string, error) {
+func (c *Client) EncryptCustomer(customer *Customer, accNo string) (string, error) {
 	if customer == nil {
 		return "", nil
 	}
@@ -70,7 +70,7 @@ func (this *Client) EncryptCustomer(customer *Customer, accNo string) (string, e
 		v.Set("smsCode", customer.SMSCode)
 	}
 	if customer.PIN != "" {
-		var block, err = this.EncryptPIN(accNo, customer.PIN)
+		var block, err = c.EncryptPIN(accNo, customer.PIN)
 		if err != nil {
 			return "", err
 		}
@@ -90,7 +90,7 @@ func (this *Client) EncryptCustomer(customer *Customer, accNo string) (string, e
 
 	var evs = internal.EncodeValues(ev)
 	if evs != "" {
-		encryptedInfo, err := this.Encrypt(evs)
+		encryptedInfo, err := c.Encrypt(evs)
 		if err != nil {
 			return "", err
 		}

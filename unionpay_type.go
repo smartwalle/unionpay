@@ -49,16 +49,16 @@ type Error struct {
 	Msg  string `query:"respMsg"`
 }
 
-func (this Error) Error() string {
-	return fmt.Sprintf("%s - %s", this.Code, this.Msg)
+func (e Error) Error() string {
+	return fmt.Sprintf("%s - %s", e.Code, e.Msg)
 }
 
-func (this Error) IsSuccess() bool {
-	return this.Code.IsSuccess()
+func (e Error) IsSuccess() bool {
+	return e.Code.IsSuccess()
 }
 
-func (this Error) IsFailure() bool {
-	return this.Code.IsFailure()
+func (e Error) IsFailure() bool {
+	return e.Code.IsFailure()
 }
 
 type Payload struct {
@@ -71,11 +71,11 @@ func NewPayload() *Payload {
 	return nPayload
 }
 
-func (this *Payload) AddParam(key, value string) *Payload {
+func (p *Payload) AddParam(key, value string) *Payload {
 	if key != "" && value != "" {
-		this.values.Set(key, value)
+		p.values.Set(key, value)
 	}
-	return this
+	return p
 }
 
 type CallOption func(values url.Values)

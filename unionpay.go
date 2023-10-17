@@ -146,60 +146,60 @@ func NewWithPFXFile(filename, password, merchantId string, isProduction bool) (*
 // CreateWebPayment 方法中会构建相应的参数，然后把本方法加载的模版渲染成 HTML 代码。
 //
 // 模版参考 unionpay_type.go 文件中的 kWebPaymentTemplate 常量，该常量也是本库默认使用的模版。
-func (this *Client) LoadWebPaymentTemplate(tpl string) error {
+func (c *Client) LoadWebPaymentTemplate(tpl string) error {
 	nTemplate, err := template.New("").Parse(tpl)
 	if err != nil {
 		return err
 	}
-	this.webPaymentTpl = nTemplate
+	c.webPaymentTpl = nTemplate
 	return nil
 }
 
-func (this *Client) loadRootCert(b []byte) error {
+func (c *Client) loadRootCert(b []byte) error {
 	cert, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
 		return err
 	}
-	this.rootCert = cert
+	c.rootCert = cert
 	return nil
 }
 
 // LoadRootCert 加载银联根证书
-func (this *Client) LoadRootCert(s string) error {
-	return this.loadRootCert([]byte(s))
+func (c *Client) LoadRootCert(s string) error {
+	return c.loadRootCert([]byte(s))
 }
 
 // LoadRootCertFromFile 从文件加载银联根证书
-func (this *Client) LoadRootCertFromFile(filename string) error {
+func (c *Client) LoadRootCertFromFile(filename string) error {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	return this.loadRootCert(b)
+	return c.loadRootCert(b)
 }
 
-func (this *Client) loadIntermediateCert(b []byte) error {
+func (c *Client) loadIntermediateCert(b []byte) error {
 	cert, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
 		return err
 	}
-	this.interCert = cert
+	c.interCert = cert
 	return nil
 }
 
 // LoadIntermediateCert 加载银联中间证书
-func (this *Client) LoadIntermediateCert(s string) error {
-	return this.loadIntermediateCert([]byte(s))
+func (c *Client) LoadIntermediateCert(s string) error {
+	return c.loadIntermediateCert([]byte(s))
 }
 
 // LoadIntermediateCertFromFile 从文件加载银联中间证书
-func (this *Client) LoadIntermediateCertFromFile(filename string) error {
+func (c *Client) LoadIntermediateCertFromFile(filename string) error {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
-	return this.loadIntermediateCert(b)
+	return c.loadIntermediateCert(b)
 }
 
 // LoadEncryptKey 银联加密公钥更新查询接口（敏感加密证书）。
@@ -207,7 +207,7 @@ func (this *Client) LoadIntermediateCertFromFile(filename string) error {
 // 商户定期（1天1次）向银联全渠道系统发起获取加密公钥信息交易。在加密公钥证书更新期间，全渠道系统支持新老证书的共同使用，新老证书并行期为1个月。全渠道系统向商户返回最新的加密公钥证书，由商户服务器替换本地证书。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=758&apiservId=448&version=V2.2&bussType=0
-func (this *Client) LoadEncryptKey() error {
+func (c *Client) LoadEncryptKey() error {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("channelType", "07") // 渠道类型
@@ -218,38 +218,38 @@ func (this *Client) LoadEncryptKey() error {
 	values.Set("orderId", time.Now().Format("20060102150405"))
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 
-	var rValues, err = this.Request(kBackTrans, values)
+	var rValues, err = c.Request(kBackTrans, values)
 	if err != nil {
 		return err
 	}
 	var cert = strings.ReplaceAll(rValues.Get("encryptPubKeyCert"), "\r", "\n")
 
-	certificate, err := this.decodeCertificate([]byte(cert))
+	certificate, err := c.decodeCertificate([]byte(cert))
 	if err != nil {
 		return err
 	}
-	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
-	this.encryptCertId = certificate.SerialNumber.String()
+	c.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
+	c.encryptCertId = certificate.SerialNumber.String()
 	return nil
 }
 
 // LoadEncryptKeyFromFile 从文件加载银联敏感加密证书。
-func (this *Client) LoadEncryptKeyFromFile(filename string) error {
+func (c *Client) LoadEncryptKeyFromFile(filename string) error {
 	b, err := os.ReadFile(filename)
 	if err != nil {
 		return err
 	}
 
-	certificate, err := this.decodeCertificate(b)
+	certificate, err := c.decodeCertificate(b)
 	if err != nil {
 		return err
 	}
-	this.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
-	this.encryptCertId = certificate.SerialNumber.String()
+	c.encryptPublicKey, _ = certificate.PublicKey.(*rsa.PublicKey)
+	c.encryptCertId = certificate.SerialNumber.String()
 	return nil
 }
 
-func (this *Client) decodeCertificate(b []byte) (*x509.Certificate, error) {
+func (c *Client) decodeCertificate(b []byte) (*x509.Certificate, error) {
 	certificate, err := ncrypto.DecodeCertificate(b)
 	if err != nil {
 		return nil, err
@@ -257,18 +257,18 @@ func (this *Client) decodeCertificate(b []byte) (*x509.Certificate, error) {
 	return certificate, nil
 }
 
-func (this *Client) URLValues(values url.Values) (url.Values, error) {
+func (c *Client) URLValues(values url.Values) (url.Values, error) {
 	if values == nil {
 		values = url.Values{}
 	}
 
-	values.Set("version", this.version)
+	values.Set("version", c.version)
 	values.Set("encoding", "UTF-8")
-	values.Set("merId", this.merchantId)
-	values.Set("certId", this.certId)
-	values.Set("signMethod", this.signMethod)
+	values.Set("merId", c.merchantId)
+	values.Set("certId", c.certId)
+	values.Set("signMethod", c.signMethod)
 
-	signature, err := this.signer.SignValues(values)
+	signature, err := c.signer.SignValues(values)
 	if err != nil {
 		return nil, err
 	}
@@ -276,13 +276,13 @@ func (this *Client) URLValues(values url.Values) (url.Values, error) {
 	return values, nil
 }
 
-func (this *Client) Request(api string, values url.Values) (url.Values, error) {
-	values, err := this.URLValues(values)
+func (c *Client) Request(api string, values url.Values) (url.Values, error) {
+	values, err := c.URLValues(values)
 	if err != nil {
 		return nil, err
 	}
 
-	var req = ngx.NewRequest(http.MethodPost, this.host+api, ngx.WithClient(this.Client))
+	var req = ngx.NewRequest(http.MethodPost, c.host+api, ngx.WithClient(c.Client))
 	req.SetForm(values)
 
 	rsp, err := req.Do(context.Background())
@@ -303,15 +303,15 @@ func (this *Client) Request(api string, values url.Values) (url.Values, error) {
 	}
 
 	// 验证签名
-	if err = this.VerifySign(rValues); err != nil {
+	if err = c.VerifySign(rValues); err != nil {
 		return nil, err
 	}
 
 	return rValues, nil
 }
 
-func (this *Client) VerifySign(values url.Values) error {
-	verifier, err := this.getVerifier(values.Get("signPubKeyCert"))
+func (c *Client) VerifySign(values url.Values) error {
+	verifier, err := c.getVerifier(values.Get("signPubKeyCert"))
 	if err != nil {
 		return err
 	}
@@ -324,23 +324,23 @@ func (this *Client) VerifySign(values url.Values) error {
 	return verifier.VerifyValues(values, signature, nsign.WithIgnore("signature"))
 }
 
-func (this *Client) getVerifier(cert string) (Verifier, error) {
-	this.mu.Lock()
-	defer this.mu.Unlock()
+func (c *Client) getVerifier(cert string) (Verifier, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
 
-	var verifier = this.verifiers[cert]
+	var verifier = c.verifiers[cert]
 	if verifier == nil {
 		certificate, err := ncrypto.DecodeCertificate([]byte(cert))
 		if err != nil {
 			return nil, err
 		}
 
-		if err = internal.VerifyCert(this.rootCert, this.interCert, certificate); err != nil {
+		if err = internal.VerifyCert(c.rootCert, c.interCert, certificate); err != nil {
 			return nil, err
 		}
 
 		verifier = nsign.New(nsign.WithMethod(internal.NewRSAMethod(crypto.SHA256, nil, certificate.PublicKey.(*rsa.PublicKey))))
-		this.verifiers[cert] = verifier
+		c.verifiers[cert] = verifier
 	}
 	return verifier, nil
 }
@@ -352,13 +352,13 @@ func (this *Client) getVerifier(cert string) (Verifier, error) {
 // 如果商户号未开通【商户对敏感信息加密】权限，那么不需要对敏感信息进行解密。
 //
 // https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
-func (this *Client) Decrypt(s string) (string, error) {
+func (c *Client) Decrypt(s string) (string, error) {
 	var ciphertext, err = base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return "", nil
 	}
 
-	ciphertext, err = ncrypto.RSADecrypt(ciphertext, this.decryptPrivateKey)
+	ciphertext, err = ncrypto.RSADecrypt(ciphertext, c.decryptPrivateKey)
 	if err != nil {
 		return "", nil
 	}
@@ -368,8 +368,8 @@ func (this *Client) Decrypt(s string) (string, error) {
 // EncryptCertId 获取敏感信息加密证书 id。
 //
 // 用于各接口中的 encryptCertId 字段。
-func (this *Client) EncryptCertId() string {
-	return this.encryptCertId
+func (c *Client) EncryptCertId() string {
+	return c.encryptCertId
 }
 
 // Encrypt 对数据进行加密，并对加密的结果使用 base64 进行编码，（用于加密敏感信息）。
@@ -379,16 +379,16 @@ func (this *Client) EncryptCertId() string {
 // 如果商户号未开通【商户对敏感信息加密】权限，那么不需要对敏感信息进行加密。
 //
 // https://open.unionpay.com/tjweb/support/faq/mchlist?id=537
-func (this *Client) Encrypt(s string) (string, error) {
-	return this.EncryptBytes([]byte(s))
+func (c *Client) Encrypt(s string) (string, error) {
+	return c.EncryptBytes([]byte(s))
 }
 
-func (this *Client) EncryptBytes(b []byte) (string, error) {
-	if this.encryptPublicKey == nil || this.encryptCertId == "" {
+func (c *Client) EncryptBytes(b []byte) (string, error) {
+	if c.encryptPublicKey == nil || c.encryptCertId == "" {
 		return "", errors.New("public key not found, you need to call LoadEncryptKey() first")
 	}
 
-	var ciphertext, err = ncrypto.RSAEncrypt(b, this.encryptPublicKey)
+	var ciphertext, err = ncrypto.RSAEncrypt(b, c.encryptPublicKey)
 	if err != nil {
 		return "", err
 	}
@@ -396,8 +396,8 @@ func (this *Client) EncryptBytes(b []byte) (string, error) {
 }
 
 // EncryptPIN 对 PIN 进行加密，并对加密的结果使用 base64 进行编码。
-func (this *Client) EncryptPIN(pan, pin string) (string, error) {
-	return this.EncryptBytes(PINBlock(pan, pin))
+func (c *Client) EncryptPIN(pan, pin string) (string, error) {
+	return c.EncryptBytes(PINBlock(pan, pin))
 }
 
 // PINBlock https://paymentcardtools.com/pin-block-calculators/iso9564-format-0

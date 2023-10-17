@@ -22,8 +22,8 @@ func NewRSAMethod(h crypto.Hash, privateKey *rsa.PrivateKey, publicKey *rsa.Publ
 	return nRSA
 }
 
-func (this *RSAMethod) hash(data []byte) ([]byte, error) {
-	var h = this.h.New()
+func (m *RSAMethod) hash(data []byte) ([]byte, error) {
+	var h = m.h.New()
 	if _, err := h.Write(data); err != nil {
 		return nil, err
 	}
@@ -31,28 +31,28 @@ func (this *RSAMethod) hash(data []byte) ([]byte, error) {
 	return hashed, nil
 }
 
-func (this *RSAMethod) Sign(data []byte) ([]byte, error) {
-	hashed, err := this.hash(data)
+func (m *RSAMethod) Sign(data []byte) ([]byte, error) {
+	hashed, err := m.hash(data)
 	if err != nil {
 		return nil, err
 	}
 
-	hashed, err = this.hash([]byte(hex.EncodeToString(hashed)))
+	hashed, err = m.hash([]byte(hex.EncodeToString(hashed)))
 	if err != nil {
 		return nil, err
 	}
-	return rsa.SignPKCS1v15(rand.Reader, this.privateKey, this.h, hashed)
+	return rsa.SignPKCS1v15(rand.Reader, m.privateKey, m.h, hashed)
 }
 
-func (this *RSAMethod) Verify(data []byte, signature []byte) error {
-	hashed, err := this.hash(data)
+func (m *RSAMethod) Verify(data []byte, signature []byte) error {
+	hashed, err := m.hash(data)
 	if err != nil {
 		return err
 	}
 
-	hashed, err = this.hash([]byte(fmt.Sprintf("%x", hashed)))
+	hashed, err = m.hash([]byte(fmt.Sprintf("%x", hashed)))
 	if err != nil {
 		return err
 	}
-	return rsa.VerifyPKCS1v15(this.publicKey, this.h, hashed, signature)
+	return rsa.VerifyPKCS1v15(m.publicKey, m.h, hashed, signature)
 }

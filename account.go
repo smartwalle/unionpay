@@ -18,7 +18,7 @@ import (
 // backURL：后台通知地址。
 //
 // accNo：账号、卡号。
-func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
+func (c *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -39,20 +39,20 @@ func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string,
 	values.Set("txnAmt", amount)
 	values.Set("backUrl", backURL)
 
-	values.Set("encryptCertId", this.EncryptCertId())
-	acc, err := this.Encrypt(accNo)
+	values.Set("encryptCertId", c.EncryptCertId())
+	acc, err := c.Encrypt(accNo)
 	if err != nil {
 		return nil, err
 	}
 	values.Set("accNo", acc)
 
-	customerInfo, err := this.EncryptCustomer(customer, accNo)
+	customerInfo, err := c.EncryptCustomer(customer, accNo)
 	if err != nil {
 		return nil, err
 	}
 	values.Set("customerInfo", customerInfo)
 
-	rValues, err := this.Request(kBackTrans, values)
+	rValues, err := c.Request(kBackTrans, values)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (this *Client) CreateAccountPayment(orderId, amount, backURL, accNo string,
 // txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，orderId 和 txnTime 组成唯一订单信息。
 //
 // 冲正必须与原始消费在同一天（准确讲是昨日23:00至本日23:00之间）。 冲正交易，仅用于超时无应答等异常场景，只有发生支付系统超时或者支付结果未知时可调用冲正，其他正常支付的订单如果需要实现相通功能，请调用消费撤销或者退货。
-func (this *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallOption) (*Reverse, error) {
+func (c *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallOption) (*Reverse, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -92,7 +92,7 @@ func (this *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallO
 	values.Set("orderId", orderId)
 	values.Set("txnTime", txnTime)
 
-	var rValues, err = this.Request(kQueryTrans, values)
+	var rValues, err = c.Request(kQueryTrans, values)
 	if err != nil {
 		return nil, err
 	}
