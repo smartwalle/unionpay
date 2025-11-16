@@ -207,7 +207,7 @@ func (c *Client) LoadIntermediateCertFromFile(filename string) error {
 // 商户定期（1天1次）向银联全渠道系统发起获取加密公钥信息交易。在加密公钥证书更新期间，全渠道系统支持新老证书的共同使用，新老证书并行期为1个月。全渠道系统向商户返回最新的加密公钥证书，由商户服务器替换本地证书。
 //
 // 文档地址：https://open.unionpay.com/tjweb/acproduct/APIList?acpAPIId=758&apiservId=448&version=V2.2&bussType=0
-func (c *Client) LoadEncryptKey() error {
+func (c *Client) LoadEncryptKey(ctx context.Context) error {
 	var values = url.Values{}
 	values.Set("accessType", "0")
 	values.Set("channelType", "07") // 渠道类型
@@ -218,7 +218,7 @@ func (c *Client) LoadEncryptKey() error {
 	values.Set("orderId", time.Now().Format("20060102150405"))
 	values.Set("txnTime", time.Now().Format("20060102150405"))
 
-	var rValues, err = c.Request(kBackTrans, values)
+	var rValues, err = c.Request(ctx, kBackTrans, values)
 	if err != nil {
 		return err
 	}
@@ -276,16 +276,17 @@ func (c *Client) URLValues(values url.Values) (url.Values, error) {
 	return values, nil
 }
 
-func (c *Client) Request(api string, values url.Values) (url.Values, error) {
+func (c *Client) Request(ct context.Context, api string, values url.Values) (url.Values, error) {
 	values, err := c.URLValues(values)
 	if err != nil {
 		return nil, err
 	}
 
-	var req = ngx.NewRequest(http.MethodPost, c.host+api, ngx.WithClient(c.Client))
-	req.SetForm(values)
+	var req = ngx.NewRequest(http.MethodPost, c.host, ngx.WithClient(c.Client))
+	req.JoinPath(api)
+	req.Form = values
 
-	rsp, err := req.Do(context.Background())
+	rsp, err := req.Do(ct)
 	if err != nil {
 		return nil, err
 	}

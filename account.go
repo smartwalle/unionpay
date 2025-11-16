@@ -1,6 +1,7 @@
 package unionpay
 
 import (
+	"context"
 	"net/url"
 	"time"
 )
@@ -18,7 +19,7 @@ import (
 // backURL：后台通知地址。
 //
 // accNo：账号、卡号。
-func (c *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
+func (c *Client) CreateAccountPayment(ctx context.Context, orderId, amount, backURL, accNo string, customer *Customer, opts ...CallOption) (*AccountPayment, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -52,7 +53,7 @@ func (c *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, cu
 	}
 	values.Set("customerInfo", customerInfo)
 
-	rValues, err := c.Request(kBackTrans, values)
+	rValues, err := c.Request(ctx, kBackTrans, values)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +74,7 @@ func (c *Client) CreateAccountPayment(orderId, amount, backURL, accNo string, cu
 // txnTime：订单发送时间，格式为 YYYYMMDDhhmmss，orderId 和 txnTime 组成唯一订单信息。
 //
 // 冲正必须与原始消费在同一天（准确讲是昨日23:00至本日23:00之间）。 冲正交易，仅用于超时无应答等异常场景，只有发生支付系统超时或者支付结果未知时可调用冲正，其他正常支付的订单如果需要实现相通功能，请调用消费撤销或者退货。
-func (c *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallOption) (*Reverse, error) {
+func (c *Client) ReverseAccountPayment(ctx context.Context, orderId, txnTime string, opts ...CallOption) (*Reverse, error) {
 	var values = url.Values{}
 	// 此处的参数可被 WithPayload() 替换
 	values.Set("accessType", "0")
@@ -92,7 +93,7 @@ func (c *Client) ReverseAccountPayment(orderId, txnTime string, opts ...CallOpti
 	values.Set("orderId", orderId)
 	values.Set("txnTime", txnTime)
 
-	var rValues, err = c.Request(kQueryTrans, values)
+	var rValues, err = c.Request(ctx, kQueryTrans, values)
 	if err != nil {
 		return nil, err
 	}

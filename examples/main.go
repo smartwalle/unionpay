@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/smartwalle/unionpay"
@@ -31,7 +32,7 @@ func main() {
 	}
 
 	// 加载敏感信息加密密钥
-	if err = client.LoadEncryptKey(); err != nil {
+	if err = client.LoadEncryptKey(context.Background()); err != nil {
 		log.Println("加载敏感信息加密密钥发生错误", err)
 		return
 	}
@@ -51,7 +52,7 @@ func main() {
 	})
 
 	http.HandleFunc("/unionpay/web", func(writer http.ResponseWriter, request *http.Request) {
-		var payment, err = client.CreateWebPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
+		var payment, err = client.CreateWebPayment(context.Background(), fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/front", kServerDomain+"/unionpay/back")
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 			return
@@ -62,7 +63,7 @@ func main() {
 	})
 
 	http.HandleFunc("/unionpay/app", func(writer http.ResponseWriter, request *http.Request) {
-		var payment, err = client.CreateAppPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
+		var payment, err = client.CreateAppPayment(context.Background(), fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/union/back")
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 			return
@@ -77,7 +78,7 @@ func main() {
 		var customer = &unionpay.Customer{}
 		customer.SMSCode = "111111"
 
-		var payment, err = client.CreateAccountPayment(fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/back", "6216261000000000018", customer)
+		var payment, err = client.CreateAccountPayment(context.Background(), fmt.Sprintf("%d", xid.Next()), "100", kServerDomain+"/unionpay/back", "6216261000000000018", customer)
 		if err != nil {
 			writer.Write([]byte(err.Error()))
 			return
@@ -93,7 +94,7 @@ func main() {
 		var orderId = request.Form.Get("order_id")
 		var txnTime = request.Form.Get("txn_time")
 
-		var transaction, err = client.GetTransaction(orderId, txnTime)
+		var transaction, err = client.GetTransaction(context.Background(), orderId, txnTime)
 		if err != nil {
 			log.Println("查询错误:", err)
 			return
